@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conference Poster Printing — Order &amp; Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16273D;
+    --ink-soft:#22364E;
+    --cyan:#3E7CA6;
+    --cyan-bright:#5B9AC4;
+    --kraft:#C08A46;
+    --kraft-soft:#E4C994;
+    --paper:#EFEDE3;
+    --paper-warm:#E7E3D4;
+    --charcoal:#22262B;
+    --proof-red:#B8412C;
+    --line:rgba(22,39,61,0.14);
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--charcoal);
+    font-family:'Source Serif 4', Georgia, serif;
+    line-height:1.55;
+  }
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk', sans-serif;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.02em;
+  }
+  a{color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ---------- Ruler strip ---------- */
+  .ruler{
+    height:14px;
+    background:
+      repeating-linear-gradient(90deg,
+        var(--cyan-bright) 0 1px,
+        transparent 1px 40px);
+    background-color:var(--ink);
+    border-bottom:1px solid rgba(255,255,255,0.15);
+  }
+
+  /* ---------- Nav ---------- */
+  .nav{
+    background:var(--ink);
+    color:var(--paper);
+    padding:18px 0;
+  }
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--kraft-soft);
+    border:1px solid rgba(228,201,148,0.5);
+    padding:2px 6px;
+    border-radius:2px;
+  }
+  .brand-name{font-size:19px;font-weight:600;}
+  .nav-links{display:flex;gap:24px;font-size:14px;}
+  .nav-links a{text-decoration:none;opacity:0.85;}
+  .nav-links a:hover{opacity:1;color:var(--cyan-bright);}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:var(--ink);
+    color:var(--paper);
+    padding:64px 0 44px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.2fr 0.8fr;
+    gap:40px;
+    align-items:center;
+  }
+  .eyebrow{
+    font-size:12.5px;
+    color:var(--kraft-soft);
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    margin-bottom:14px;
+  }
+  .hero h1{
+    font-size:clamp(34px,5vw,58px);
+    line-height:1.03;
+    font-weight:700;
+    color:#fff;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color:var(--cyan-bright);
+  }
+  .hero p.lead{
+    font-family:'Source Serif 4', serif;
+    font-size:18px;
+    color:rgba(239,237,227,0.82);
+    max-width:46ch;
+    margin-top:18px;
+  }
+  .cta-row{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 22px;
+    border-radius:2px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:'Space Grotesk', sans-serif;
+    text-decoration:none;
+    border:1px solid transparent;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--cyan-bright);color:var(--ink);}
+  .btn-primary:hover{background:#78ADD0;}
+  .btn-ghost{border-color:rgba(239,237,227,0.4);color:var(--paper);}
+  .btn-ghost:hover{border-color:var(--cyan-bright);color:var(--cyan-bright);}
+
+  .hero-art{position:relative;}
+  .roll-svg{width:100%;height:auto;}
+
+  .spec-strip{
+    margin-top:52px;
+    border-top:1px solid rgba(239,237,227,0.18);
+    padding-top:16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 28px;
+    font-size:12.5px;
+    color:rgba(239,237,227,0.75);
+  }
+  .spec-strip span.sep{color:var(--kraft-soft);}
+
+  /* ---------- Section shell ---------- */
+  section{padding:76px 0;}
+  .section-head{max-width:640px;margin-bottom:44px;}
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--cyan);
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    margin-bottom:10px;
+  }
+  .section-head h2{font-size:clamp(26px,3.4vw,36px);}
+  .section-head p{color:rgba(34,38,43,0.72);margin-top:12px;font-size:16.5px;}
+
+  /* ---------- How it works ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .step{background:var(--paper);padding:30px 26px;}
+  .step .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--kraft);
+    margin-bottom:14px;
+  }
+  .step h3{font-size:19px;margin-bottom:8px;}
+  .step p{font-size:15px;color:rgba(34,38,43,0.7);margin:0;}
+
+  /* ---------- Quote calculator (signature) ---------- */
+  .calc-shell{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .calc-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .calc-controls{padding:40px;border-right:1px solid rgba(239,237,227,0.14);}
+  .calc-preview{padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink-soft);}
+  @media (max-width:860px){
+    .calc-grid{grid-template-columns:1fr;}
+    .calc-controls{border-right:none;border-bottom:1px solid rgba(239,237,227,0.14);}
+  }
+
+  .field-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--kraft-soft);
+    display:block;
+    margin-bottom:8px;
+  }
+  .preset-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+  .preset-btn{
+    background:transparent;
+    border:1px solid rgba(239,237,227,0.3);
+    color:var(--paper);
+    padding:8px 12px;
+    font-size:13px;
+    font-family:'IBM Plex Mono', monospace;
+    border-radius:2px;
+  }
+  .preset-btn.active,.preset-btn:hover{border-color:var(--cyan-bright);color:var(--cyan-bright);}
+
+  .dim-row{display:flex;gap:14px;margin-bottom:22px;}
+  .dim-field{flex:1;}
+  .dim-field input{
+    width:100%;
+    background:var(--ink);
+    border:1px solid rgba(239,237,227,0.3);
+    color:var(--paper);
+    padding:10px 12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    border-radius:2px;
+  }
+  .dim-field input:focus{outline:none;border-color:var(--cyan-bright);}
+
+  select.calc-select{
+    width:100%;
+    background:var(--ink);
+    border:1px solid rgba(239,237,227,0.3);
+    color:var(--paper);
+    padding:10px 12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    border-radius:2px;
+    margin-bottom:22px;
+  }
+
+  .qty-rush-row{display:flex;gap:14px;margin-bottom:8px;}
+  .qty-field input{
+    width:90px;
+    background:var(--ink);
+    border:1px solid rgba(239,237,227,0.3);
+    color:var(--paper);
+    padding:10px 12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    border-radius:2px;
+  }
+  .rush-toggle{
+    display:flex;align-items:center;gap:9px;
+    border:1px solid rgba(239,237,227,0.3);
+    padding:10px 14px;
+    border-radius:2px;
+    font-size:13.5px;
+    font-family:'IBM Plex Mono', monospace;
+    cursor:pointer;
+    user-select:none;
+  }
+  .rush-toggle input{accent-color:var(--proof-red);}
+
+  .price-box{margin-top:26px;border-top:1px dashed rgba(239,237,227,0.3);padding-top:20px;}
+  .price-box .amount{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;color:var(--cyan-bright);}
+  .price-box .note{font-size:12.5px;color:rgba(239,237,227,0.6);margin-top:6px;}
+
+  /* proof preview */
+  .proof-frame{
+    width:100%;
+    max-width:300px;
+  }
+  .proof-caption{
+    margin-top:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:rgba(239,237,227,0.65);
+    text-align:center;
+  }
+
+  /* ---------- Reference table ---------- */
+  table.ref{
+    width:100%;
+    border-collapse:collapse;
+    font-size:15px;
+  }
+  table.ref th{
+    text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--cyan);
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  table.ref td{
+    padding:14px;
+    border-bottom:1px solid var(--line);
+    color:var(--charcoal);
+  }
+  table.ref tr:last-child td{border-bottom:none;}
+
+  /* ---------- Order form ---------- */
+  .order-shell{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:44px;
+  }
+  @media (max-width:640px){.order-shell{padding:28px;}}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .form-grid .full{grid-column:1/-1;}
+  @media (max-width:640px){.form-grid{grid-template-columns:1fr;}}
+  .form-field label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:rgba(34,38,43,0.55);
+    margin-bottom:7px;
+  }
+  .form-field input,.form-field select,.form-field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    padding:11px 13px;
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    border-radius:2px;
+    color:var(--charcoal);
+  }
+  .form-field input:focus,.form-field select:focus,.form-field textarea:focus{
+    outline:none;border-color:var(--cyan);
+  }
+  .form-field textarea{resize:vertical;min-height:90px;}
+  .order-submit{margin-top:28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .btn-dark{background:var(--ink);color:var(--paper);}
+  .btn-dark:hover{background:var(--ink-soft);}
+  .order-note{font-size:13px;color:rgba(34,38,43,0.55);}
+
+  .confirm{
+    margin-top:26px;
+    border:1px dashed var(--cyan);
+    background:rgba(62,124,166,0.06);
+    padding:22px 24px;
+    border-radius:2px;
+    display:none;
+  }
+  .confirm.show{display:block;}
+  .confirm h4{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:8px;color:var(--ink);}
+  .confirm pre{
+    white-space:pre-wrap;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    background:#fff;
+    border:1px solid var(--line);
+    padding:14px;
+    border-radius:2px;
+    color:var(--charcoal);
+  }
+  .confirm .confirm-actions{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;}
+  .link-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    text-decoration:underline;
+    background:none;
+    border:none;
+    color:var(--cyan);
+    padding:0;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    background:var(--ink);
+    color:rgba(239,237,227,0.75);
+    padding:48px 0 34px;
+    font-size:14px;
+  }
+  .footer-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;}
+  footer .brand-name{color:var(--paper);}
+  footer a{text-decoration:none;}
+  footer a:hover{color:var(--cyan-bright);}
+  .footer-legal{margin-top:30px;font-size:12px;color:rgba(239,237,227,0.4);}
+</style>
+</head>
+<body>
+
+<div class="ruler"></div>
+
+<div class="nav">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark mono">T650</span>
+      <span class="brand-name">Conference Poster Printing</span>
+    </div>
+    <div class="nav-links">
+      <a href="#quote">Get a Quote</a>
+      <a href="#order">Place an Order</a>
+      <a href="#sizes">Sizes &amp; Materials</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow mono">Large-format printing, done in-house</div>
+      <h1>Your poster,<br><em>printed right</em>,<br>before your flight.</h1>
+      <p class="lead">Academic conference posters printed on our own HP DesignJet T650 — sharp text, true colour, and a turnaround built around deadlines, not queues.</p>
+      <div class="cta-row">
+        <a href="#quote" class="btn btn-primary">Get an instant quote</a>
+        <a href="#order" class="btn btn-ghost">Place an order</a>
+      </div>
+      <div class="spec-strip mono">
+        <span>HP DESIGNJET T650</span><span class="sep">·</span>
+        <span>UP TO 36" WIDE</span><span class="sep">·</span>
+        <span>MATTE / SATIN / GLOSS / FABRIC</span><span class="sep">·</span>
+        <span>2400 × 1200 DPI</span>
+      </div>
+    </div>
+    <div class="hero-art">
+      <svg class="roll-svg" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="160" cy="46" rx="86" ry="20" fill="none" stroke="#5B9AC4" stroke-width="2"/>
+        <ellipse cx="160" cy="46" rx="30" ry="7" fill="none" stroke="#C08A46" stroke-width="2"/>
+        <path d="M74 46 V 250 A86 20 0 0 0 246 250 V46" fill="none" stroke="#5B9AC4" stroke-width="2"/>
+        <ellipse cx="160" cy="250" rx="86" ry="20" fill="none" stroke="#5B9AC4" stroke-width="2" stroke-dasharray="3 5"/>
+        <g stroke="#E4C994" stroke-width="1" opacity="0.6">
+          <line x1="90" y1="60" x2="90" y2="238"/>
+          <line x1="230" y1="60" x2="230" y2="238"/>
+        </g>
+        <g transform="translate(60 270)">
+          <rect x="0" y="0" width="200" height="60" rx="2" fill="none" stroke="#EFEDE3" stroke-width="1.4"/>
+          <line x1="0" y1="0" x2="10" y2="0" stroke="#B8412C" stroke-width="2"/>
+          <line x1="0" y1="0" x2="0" y2="10" stroke="#B8412C" stroke-width="2"/>
+          <line x1="190" y1="0" x2="200" y2="0" stroke="#B8412C" stroke-width="2"/>
+          <line x1="200" y1="0" x2="200" y2="10" stroke="#B8412C" stroke-width="2"/>
+          <line x1="0" y1="60" x2="10" y2="60" stroke="#B8412C" stroke-width="2"/>
+          <line x1="0" y1="50" x2="0" y2="60" stroke="#B8412C" stroke-width="2"/>
+          <line x1="190" y1="60" x2="200" y2="60" stroke="#B8412C" stroke-width="2"/>
+          <line x1="200" y1="50" x2="200" y2="60" stroke="#B8412C" stroke-width="2"/>
+          <text x="100" y="35" text-anchor="middle" fill="#EFEDE3" font-family="IBM Plex Mono, monospace" font-size="11">36 × 48 IN</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Process</div>
+      <h2>Three steps, one roll of paper.</h2>
+      <p>No account required to get a price. You only fill in details once you're ready to order.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num mono">01</div>
+        <h3>Send your file</h3>
+        <p>PDF or PowerPoint, sized to scale. We flag anything that will print blurry before it hits the printer.</p>
+      </div>
+      <div class="step">
+        <div class="num mono">02</div>
+        <h3>Choose size &amp; finish</h3>
+        <p>Pick a standard conference size or enter custom dimensions, then a paper finish — matte, satin, gloss, or fabric.</p>
+      </div>
+      <div class="step">
+        <div class="num mono">03</div>
+        <h3>Pickup or shipping</h3>
+        <p>Most orders are ready within a day. Rush turnaround is available for last-minute flights.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quote">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Instant quote</div>
+      <h2>Scale your poster, see your price.</h2>
+      <p>The proof panel updates as you type — the same proportions we'll cut to.</p>
+    </div>
+
+    <div class="calc-shell">
+      <div class="calc-grid">
+        <div class="calc-controls">
+          <span class="field-label">Standard sizes</span>
+          <div class="preset-row" id="presetRow"></div>
+
+          <div class="dim-row">
+            <div class="dim-field">
+              <span class="field-label">Width (in, max 36)</span>
+              <input type="number" id="widthInput" min="6" max="36" value="36">
+            </div>
+            <div class="dim-field">
+              <span class="field-label">Height (in, max 90)</span>
+              <input type="number" id="heightInput" min="6" max="90" value="48">
+            </div>
+          </div>
+
+          <span class="field-label">Material</span>
+          <select class="calc-select" id="materialSelect">
+            <option value="9">Matte paper — $9/sq ft</option>
+            <option value="11">Satin paper — $11/sq ft</option>
+            <option value="12">Gloss paper — $12/sq ft</option>
+            <option value="15">Fabric (foldable) — $15/sq ft</option>
+          </select>
+
+          <div class="qty-rush-row">
+            <div class="qty-field">
+              <span class="field-label">Copies</span>
+              <input type="number" id="qtyInput" min="1" max="20" value="1">
+            </div>
+            <label class="rush-toggle">
+              <input type="checkbox" id="rushInput">
+              <span>Rush (next-day, +30%)</span>
+            </label>
+          </div>
+
+          <div class="price-box">
+            <div class="amount mono" id="priceOut">$0</div>
+            <div class="note">Estimate only — final price confirmed when you place your order. CAD.</div>
+          </div>
+        </div>
+
+        <div class="calc-preview">
+          <svg id="proofSvg" class="proof-frame" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="proof-caption mono" id="proofCaption">36 × 48 IN · MATTE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sizes">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Reference</div>
+      <h2>Sizes &amp; materials</h2>
+      <p>The T650 prints up to 36" wide on a continuous roll, so height can run as long as your poster needs.</p>
+    </div>
+    <table class="ref">
+      <thead>
+        <tr><th>Size</th><th>Typical use</th><th>Materials</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">24 × 36 in</td><td>Compact conference poster</td><td>Matte, satin, gloss</td></tr>
+        <tr><td class="mono">36 × 48 in</td><td>Standard academic poster</td><td>Matte, satin, gloss, fabric</td></tr>
+        <tr><td class="mono">36 × 56 in</td><td>Landscape / wide layouts</td><td>Matte, satin, gloss, fabric</td></tr>
+        <tr><td class="mono">Custom</td><td>Anything up to 36 × 90 in</td><td>All finishes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker">Order</div>
+      <h2>Place your order</h2>
+      <p>Fill this in once you know your size and deadline. We'll follow up to collect your print file.</p>
+    </div>
+
+    <div class="order-shell">
+      <form id="orderForm">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="fName">Name</label>
+            <input type="text" id="fName" required>
+          </div>
+          <div class="form-field">
+            <label for="fEmail">Email</label>
+            <input type="email" id="fEmail" required>
+          </div>
+          <div class="form-field">
+            <label for="fInstitution">Institution / lab</label>
+            <input type="text" id="fInstitution">
+          </div>
+          <div class="form-field">
+            <label for="fConference">Conference &amp; deadline</label>
+            <input type="text" id="fConference" placeholder="e.g. CPA 2026, pickup by Jun 10">
+          </div>
+          <div class="form-field">
+            <label for="fSize">Poster size</label>
+            <input type="text" id="fSize" placeholder="e.g. 36 x 48 in, or 'see quote above'">
+          </div>
+          <div class="form-field">
+            <label for="fMaterial">Material</label>
+            <select id="fMaterial">
+              <option>Matte paper</option>
+              <option>Satin paper</option>
+              <option>Gloss paper</option>
+              <option>Fabric (foldable)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="fQty">Copies</label>
+            <input type="number" id="fQty" min="1" value="1">
+          </div>
+          <div class="form-field">
+            <label for="fRush">Turnaround</label>
+            <select id="fRush">
+              <option value="Standard">Standard</option>
+              <option value="Rush">Rush (next-day)</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="fNotes">Notes</label>
+            <textarea id="fNotes" placeholder="Bleed, colour matching, pickup vs. shipping, anything else we should know."></textarea>
+          </div>
+        </div>
+
+        <div class="order-submit">
+          <button type="submit" class="btn btn-dark">Submit order request</button>
+          <span class="order-note">We'll reply by email to confirm price and collect your file.</span>
+        </div>
+      </form>
+
+      <div class="confirm" id="confirmBox">
+        <h4>Order request ready</h4>
+        <p style="font-size:14px;color:rgba(34,38,43,0.7);margin:0 0 4px;">Here's a summary — send it to us by email, or copy it for your records.</p>
+        <pre id="confirmText"></pre>
+        <div class="confirm-actions">
+          <a class="link-btn" id="mailtoLink" href="#">Email this order →</a>
+          <button type="button" class="link-btn" id="copyBtn">Copy to clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap footer-grid">
+    <div>
+      <div class="brand-name" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin-bottom:10px;">Conference Poster Printing</div>
+      <div>Printed in-house on an HP DesignJet T650.</div>
+      <div>Vaughan / Waterloo, Ontario</div>
+    </div>
+    <div>
+      <div class="field-label" style="color:var(--kraft-soft);">Contact</div>
+      <div><a href="mailto:orders@conferenceposterprinting.ca">orders@conferenceposterprinting.ca</a></div>
+    </div>
+  </div>
+  <div class="wrap footer-legal">Estimates are approximate and confirmed at order time. Update pricing, contact details, and turnaround times to match your actual operation.</div>
+</footer>
+
+<script>
+  // ---- Preset sizes ----
+  const presets = [
+    {label:'24×36', w:24, h:36},
+    {label:'36×48', w:36, h:48},
+    {label:'36×56', w:36, h:56},
+    {label:'Custom', w:null, h:null}
+  ];
+  const presetRow = document.getElementById('presetRow');
+  presets.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset-btn mono' + (i===1 ? ' active' : '');
+    btn.textContent = p.label;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if(p.w){ widthInput.value = p.w; heightInput.value = p.h; }
+      update();
+    });
+    presetRow.appendChild(btn);
+  });
+
+  const widthInput = document.getElementById('widthInput');
+  const heightInput = document.getElementById('heightInput');
+  const materialSelect = document.getElementById('materialSelect');
+  const qtyInput = document.getElementById('qtyInput');
+  const rushInput = document.getElementById('rushInput');
+  const priceOut = document.getElementById('priceOut');
+  const proofSvg = document.getElementById('proofSvg');
+  const proofCaption = document.getElementById('proofCaption');
+
+  function materialLabel(select){
+    return select.options[select.selectedIndex].text.split(' — ')[0];
+  }
+
+  function drawProof(w, h){
+    const boxMax = 220, pad = 40;
+    const scale = Math.min(boxMax / w, boxMax / h);
+    const rw = w * scale, rh = h * scale;
+    const x0 = 150 - rw/2, y0 = 150 - rh/2;
+    const c = '#B8412C', stroke = '#EFEDE3';
+    const tick = 10;
+
+    proofSvg.innerHTML = `
+      <rect x="${x0}" y="${y0}" width="${rw}" height="${rh}" fill="rgba(62,124,166,0.18)" stroke="${stroke}" stroke-width="1.4"/>
+      <g stroke="${c}" stroke-width="2">
+        <line x1="${x0-tick}" y1="${y0}" x2="${x0}" y2="${y0}"/>
+        <line x1="${x0}" y1="${y0-tick}" x2="${x0}" y2="${y0}"/>
+        <line x1="${x0+rw}" y1="${y0}" x2="${x0+rw+tick}" y2="${y0}"/>
+        <line x1="${x0+rw}" y1="${y0-tick}" x2="${x0+rw}" y2="${y0}"/>
+        <line x1="${x0-tick}" y1="${y0+rh}" x2="${x0}" y2="${y0+rh}"/>
+        <line x1="${x0}" y1="${y0+rh}" x2="${x0}" y2="${y0+rh+tick}"/>
+        <line x1="${x0+rw}" y1="${y0+rh}" x2="${x0+rw+tick}" y2="${y0+rh}"/>
+        <line x1="${x0+rw}" y1="${y0+rh}" x2="${x0+rw}" y2="${y0+rh+tick}"/>
+      </g>
+      <text x="150" y="${y0-16}" text-anchor="middle" fill="${stroke}" font-family="IBM Plex Mono, monospace" font-size="11">${w}"</text>
+      <text x="${x0-16}" y="150" text-anchor="middle" fill="${stroke}" font-family="IBM Plex Mono, monospace" font-size="11" transform="rotate(-90 ${x0-16} 150)">${h}"</text>
+    `;
+  }
+
+  function update(){
+    let w = Math.min(36, Math.max(6, parseFloat(widthInput.value) || 0));
+    let h = Math.min(90, Math.max(6, parseFloat(heightInput.value) || 0));
+    widthInput.value = w; heightInput.value = h;
+
+    const rate = parseFloat(materialSelect.value);
+    const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+    const sqft = (w * h) / 144;
+    let price = Math.max(35, sqft * rate) * qty;
+    if(rushInput.checked) price *= 1.3;
+
+    priceOut.textContent = '$' + price.toFixed(2);
+    drawProof(w, h);
+    proofCaption.textContent = `${w} × ${h} IN · ${materialLabel(materialSelect).toUpperCase()}`;
+  }
+
+  [widthInput, heightInput, materialSelect, qtyInput, rushInput].forEach(el =>
+    el.addEventListener('input', update)
+  );
+  update();
+
+  // ---- Order form ----
+  const orderForm = document.getElementById('orderForm');
+  const confirmBox = document.getElementById('confirmBox');
+  const confirmText = document.getElementById('confirmText');
+  const mailtoLink = document.getElementById('mailtoLink');
+  const copyBtn = document.getElementById('copyBtn');
+
+  orderForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const lines = [
+      'CONFERENCE POSTER PRINTING — ORDER REQUEST',
+      '',
+      `Name: ${document.getElementById('fName').value}`,
+      `Email: ${document.getElementById('fEmail').value}`,
+      `Institution / lab: ${document.getElementById('fInstitution').value}`,
+      `Conference & deadline: ${document.getElementById('fConference').value}`,
+      `Poster size: ${document.getElementById('fSize').value}`,
+      `Material: ${document.getElementById('fMaterial').value}`,
+      `Copies: ${document.getElementById('fQty').value}`,
+      `Turnaround: ${document.getElementById('fRush').value}`,
+      `Notes: ${document.getElementById('fNotes').value}`
+    ];
+    const summary = lines.join('\n');
+    confirmText.textContent = summary;
+    confirmBox.classList.add('show');
+    mailtoLink.href = 'mailto:orders@conferenceposterprinting.ca?subject=' +
+      encodeURIComponent('Poster order request — ' + document.getElementById('fName').value) +
+      '&body=' + encodeURIComponent(summary);
+    confirmBox.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(confirmText.textContent).then(() => {
+      copyBtn.textContent = 'Copied ✓';
+      setTimeout(() => copyBtn.textContent = 'Copy to clipboard', 1800);
+    });
+  });
+</script>
+
+</body>
+</html>
