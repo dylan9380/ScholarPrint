@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #EFEDE3;
+  color: #22262B;
+}
+
+.field-label {
+  @apply block font-mono text-[11px] uppercase tracking-wider text-ink/60 mb-1.5;
+}
+
+.field-input {
+  @apply w-full border border-ink/15 bg-white px-3 py-2.5 rounded-sm text-[15px] focus:outline-none focus:border-cyan;
+}
+
+.btn-primary {
+  @apply inline-flex items-center gap-2 bg-ink text-paper px-5 py-3 rounded-sm font-display font-semibold text-sm hover:bg-inksoft transition-colors;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center gap-2 border border-ink/30 text-ink px-5 py-3 rounded-sm font-display font-semibold text-sm hover:border-cyan hover:text-cyan transition-colors;
+}
