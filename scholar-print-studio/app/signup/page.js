@@ -39,7 +39,8 @@ export default function SignUpPage() {
       <div className="max-w-md mx-auto px-6 py-24 text-center">
         <h1 className="font-display text-2xl font-semibold mb-3">Check your email</h1>
         <p className="text-ink/70">
-          We sent a confirmation link to {email}. Click it, then come back and log in.
+          Your Scholar Print Studio account confirmation link was requested for {email}. Check
+          your inbox for the confirmation email, then use its link to confirm your account.
         </p>
       </div>
     );

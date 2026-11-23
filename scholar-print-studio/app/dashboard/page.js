@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("id, title, width_in, height_in, material, quantity, rush, status, created_at")
+    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, status, created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -59,6 +59,9 @@ export default async function DashboardPage() {
                   Status
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
+                  Total
+                </th>
+                <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Placed
                 </th>
               </tr>
@@ -77,6 +80,9 @@ export default async function DashboardPage() {
                   </td>
                   <td className="px-4 py-3 capitalize">{order.material}</td>
                   <td className="px-4 py-3">{STATUS_LABEL[order.status] ?? order.status}</td>
+                  <td className="px-4 py-3">
+                    {order.price_cents == null ? "—" : `$${(order.price_cents / 100).toFixed(2)}`}
+                  </td>
                   <td className="px-4 py-3 text-ink/60">
                     {new Date(order.created_at).toLocaleDateString()}
                   </td>
