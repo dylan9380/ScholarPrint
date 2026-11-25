@@ -115,13 +115,13 @@ export default function OrderForm() {
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      setAuthOpen(true);
+    if (userError) {
+      setError(userError.message);
       return;
     }
 
-    if (userError) {
-      setError(userError.message);
+    if (!user) {
+      setAuthOpen(true);
       return;
     }
 
@@ -129,6 +129,7 @@ export default function OrderForm() {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="poster-title" className="field-label">Poster title</label>
@@ -239,6 +240,7 @@ export default function OrderForm() {
         {status === "saving" ? "Preparing secure checkout…" : "Continue to payment"}
       </button>
 
+    </form>
       {authOpen && (
         <AuthModal
           onClose={() => setAuthOpen(false)}
@@ -248,6 +250,6 @@ export default function OrderForm() {
           }}
         />
       )}
-    </form>
+    </>
   );
 }
