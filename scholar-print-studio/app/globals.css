@@ -3,8 +3,57 @@
 @tailwind utilities;
 
 body {
-  background: #EFEDE3;
-  color: #22262B;
+  background: #F7F6F2;
+  color: #121212;
+}
+
+.hero-dot-grid {
+  background-image: radial-gradient(circle, rgb(18 18 18 / 18%) 0.75px, transparent 0.9px);
+  background-size: 24px 24px;
+}
+
+.hero-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.hero-poster-sheet {
+  transform: scaleY(0.025);
+  transform-origin: top center;
+  will-change: transform;
+}
+
+.hero-cursor {
+  align-items: center;
+  background: #ff4d00;
+  border: 1px solid #121212;
+  border-radius: 9999px;
+  color: #121212;
+  display: flex;
+  height: 12px;
+  justify-content: center;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  transition: height 180ms ease, width 180ms ease, background-color 180ms ease;
+  width: 12px;
+  z-index: 100;
+}
+
+.hero-cursor.is-loupe {
+  background: rgb(255 77 0 / 92%);
+  height: 92px;
+  width: 92px;
+}
+
+@media (pointer: coarse) {
+  .hero-cursor {
+    display: none;
+  }
 }
 
 .field-label {
@@ -16,7 +65,7 @@ body {
 }
 
 .btn-primary {
-  @apply inline-flex items-center gap-2 bg-ink text-paper px-5 py-3 rounded-sm font-display font-semibold text-sm hover:bg-inksoft transition-colors;
+  @apply inline-flex items-center gap-2 bg-cyanbright text-ink px-5 py-3 rounded-sm font-display font-semibold text-sm hover:bg-kraftsoft transition-colors;
 }
 
 .btn-ghost {

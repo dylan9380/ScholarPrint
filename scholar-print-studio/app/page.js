@@ -1,40 +1,28 @@
-import Link from "next/link";
 import OrderForm from "./order-form";
+import LandingHero from "./hero";
 
 export default function HomePage() {
   return (
     <div>
-      <section className="bg-ink text-paper px-6 py-24">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="font-mono text-xs uppercase tracking-widest text-kraftsoft mb-4">
-            Conference Posters
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-5">
-            Quality posters for quality research.
-          </h1>
-          <div className="flex justify-center gap-4 flex-wrap">
-            <a href="#order" className="btn-primary bg-cyanbright text-ink hover:bg-cyanbright/80">
-              Order a poster
-            </a>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 border border-paper bg-paper text-ink px-5 py-3 rounded-sm font-display font-semibold text-sm hover:bg-cyanbright hover:border-cyanbright transition-colors"
-            >
-              Create an account
-            </Link>
-          </div>
-        </div>
-      </section>
+      <LandingHero />
 
       <section className="border-b border-ink/10 bg-white/70 px-6 py-8 text-center">
         <p className="font-mono text-xs uppercase tracking-widest text-ink/60 mb-4">
           Trusted by students from
         </p>
-        <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 font-display font-semibold text-sm text-ink/80">
-          <span>University of Waterloo</span>
-          <span>University of Windsor</span>
-          <span>Laurier University</span>
-          <span>University of Guelph</span>
+        <div className="flex flex-wrap justify-center gap-3">
+          <span className="border border-ink/10 bg-white px-4 py-3 font-display font-semibold text-sm text-ink/80">
+            University of Waterloo
+          </span>
+          <span className="border border-ink/10 bg-white px-4 py-3 font-display font-semibold text-sm text-ink/80">
+            University of Windsor
+          </span>
+          <span className="border border-ink/10 bg-white px-4 py-3 font-display font-semibold text-sm text-ink/80">
+            Laurier University
+          </span>
+          <span className="border border-ink/10 bg-white px-4 py-3 font-display font-semibold text-sm text-ink/80">
+            University of Guelph
+          </span>
         </div>
       </section>
 
