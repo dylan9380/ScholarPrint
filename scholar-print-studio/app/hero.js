@@ -87,12 +87,13 @@ export default function LandingHero() {
           <span>600 DPI // 36&quot; ROLL // BUILT FOR YOUR PRESENTATION</span>
           <span className="ml-auto inline-flex items-center gap-2 text-[#FF4D00]">
             <svg
-              viewBox="0 0 64 64"
+              viewBox="0 0 90 45"
               aria-hidden="true"
-              className="h-5 w-5"
+              className="h-5 w-10"
               fill="currentColor"
             >
-              <path d="M32 3 37 17 47 9 44 22 60 20 50 31 61 37 46 40 52 54 38 49 34 62H30L26 49 12 54 18 40 3 37 14 31 4 20 20 22 17 9 27 17Z" />
+              <path d="M4 3h15v39H4zM71 3h15v39H71z" />
+              <path d="m45 3 4.1 9.5 6.7-5.8-1.6 10.1 10.4-1.1-6.1 8 9.2 4.1-10.2 3.2 4.3 8.8-10-3.1-1.7 8.3-4.1-5.1-4.1 5.1-1.7-8.3-10 3.1 4.3-8.8-10.2-3.2 9.2-4.1-6.1-8 10.4 1.1-1.6-10.1 6.7 5.8z" />
             </svg>
             <span>Proudly Canadian</span>
           </span>
