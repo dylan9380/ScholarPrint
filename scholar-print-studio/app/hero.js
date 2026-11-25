@@ -85,6 +85,17 @@ export default function LandingHero() {
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-68px)] max-w-[1440px] flex-col px-5 pb-7 pt-6 sm:px-8 lg:px-12">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#121212]/20 pb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-xs">
           <span>600 DPI // 36&quot; ROLL // BUILT FOR YOUR PRESENTATION</span>
+          <span className="ml-auto inline-flex items-center gap-2 text-[#FF4D00]">
+            <svg
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              className="h-5 w-5"
+              fill="currentColor"
+            >
+              <path d="M32 3 37 17 47 9 44 22 60 20 50 31 61 37 46 40 52 54 38 49 34 62H30L26 49 12 54 18 40 3 37 14 31 4 20 20 22 17 9 27 17Z" />
+            </svg>
+            <span>Proudly Canadian</span>
+          </span>
         </div>
 
         <div className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[0.84fr_1.16fr] lg:gap-10">
