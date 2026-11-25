@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  CONFERENCE_OPTIONS,
-  PROMO_CODE,
+  PROMO_CONFERENCE,
   PROMO_UNIT_PRICE_CENTS,
   STANDARD_UNIT_PRICE_CENTS,
   isPromoCode,
@@ -25,7 +24,6 @@ export default function OrderForm() {
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
-  const [conference, setConference] = useState("");
   const [file, setFile] = useState(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
   const [pptxPreviewStatus, setPptxPreviewStatus] = useState("idle");
@@ -92,7 +90,6 @@ export default function OrderForm() {
     formData.set("quantity", String(quantity));
     formData.set("notes", notes);
     formData.set("promoCode", promoCode.trim());
-    formData.set("conference", promoApplied ? conference : "");
     if (file) formData.set("file", file);
 
     try {
@@ -188,21 +185,21 @@ export default function OrderForm() {
       </div>
 
       <div className="border border-ink/10 p-4 rounded-sm">
-        <label htmlFor="promo-code" className="field-label">Promo code</label>
+        <label htmlFor="promo-code" className="field-label">Discount code</label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             id="promo-code"
             className="field-input"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
-            placeholder={PROMO_CODE}
+            placeholder="Enter discount code"
             autoCapitalize="characters"
           />
         </div>
         <p className="text-xs text-ink/60 mt-2">
           {promoApplied
-            ? `${PROMO_CODE} applied. This order will be hand-delivered at the selected conference.`
-            : `Enter ${PROMO_CODE} for the conference rate.`}
+            ? `Discount applied. Delivered directly to ${PROMO_CONFERENCE}, with no transport or delivery fee.`
+            : "Have a discount code? Enter it here."}
         </p>
         <div className="mt-4 border-t border-ink/15 pt-4" aria-live="polite">
           <div className="flex items-baseline justify-between gap-4 text-sm">
@@ -224,23 +221,6 @@ export default function OrderForm() {
             </span>
           </div>
         </div>
-        {promoApplied && (
-          <div className="mt-4 border-t border-ink/15 pt-4">
-            <label htmlFor="order-conference" className="field-label">Conference</label>
-            <select
-              id="order-conference"
-              className="field-input"
-              value={conference}
-              onChange={(event) => setConference(event.target.value)}
-              required
-            >
-              <option value="">Select a conference</option>
-              {CONFERENCE_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       <div>
@@ -296,7 +276,7 @@ export default function OrderForm() {
           className="field-input min-h-[90px]"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Deadline, pickup vs. shipping, colour matching, anything else."
+          placeholder="Deadline, preferred delivery details, colour matching, or other print notes."
         />
       </div>
 

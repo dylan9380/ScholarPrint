@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
 import {
-  CONFERENCE_OPTIONS,
+  PROMO_CONFERENCE,
   PROMO_CODE,
   PROMO_UNIT_PRICE_CENTS,
   STANDARD_UNIT_PRICE_CENTS,
@@ -66,18 +66,7 @@ export async function POST(request) {
     return errorResponse("That promo code is not valid.", 400);
   }
 
-  const rawConference = formData.get("conference");
-  if (rawConference && typeof rawConference !== "string") {
-    return errorResponse("Choose a valid conference.", 400);
-  }
-  const conferenceSelection = typeof rawConference === "string" ? rawConference.trim() : "";
-  if (promoCode && !CONFERENCE_OPTIONS.includes(conferenceSelection)) {
-    return errorResponse("Choose a conference for the UWPsych389 promo code.", 400);
-  }
-  if (!promoCode && conferenceSelection) {
-    return errorResponse("A conference can only be selected with the UWPsych389 promo code.", 400);
-  }
-  const conference = promoCode ? conferenceSelection : null;
+  const conference = promoCode ? PROMO_CONFERENCE : null;
 
   const title = String(formData.get("title") ?? "").trim().slice(0, 200);
   const notes = String(formData.get("notes") ?? "").slice(0, 2000);

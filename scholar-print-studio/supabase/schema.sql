@@ -74,9 +74,7 @@ begin
   if upper(coalesce(new.promo_code, '')) = 'UWPSYCH389' then
     new.promo_code := 'UWPsych389';
     new.price_cents := 3999 * new.quantity;
-    if new.conference is null or new.conference not in ('CSBBCS') then
-      raise exception 'Select a valid conference for the UWPsych389 promo code';
-    end if;
+    new.conference := 'Psych389 University of Waterloo';
   else
     new.promo_code := null;
     new.price_cents := 7999 * new.quantity;

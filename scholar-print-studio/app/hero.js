@@ -84,7 +84,7 @@ export default function LandingHero() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-68px)] max-w-[1440px] flex-col px-5 pb-7 pt-6 sm:px-8 lg:px-12">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#121212]/20 pb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-xs">
-          <span>600 DPI // 36&quot; ROLL // SAME-DAY PICKUP</span>
+          <span>600 DPI // 36&quot; ROLL // BUILT FOR YOUR PRESENTATION</span>
         </div>
 
         <div className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[0.84fr_1.16fr] lg:gap-10">
