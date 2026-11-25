@@ -4,7 +4,15 @@
 
 body {
   background: #F7F6F2;
+  background-image: radial-gradient(circle, rgb(18 18 18 / 12%) 0.75px, transparent 0.9px);
+  background-size: 24px 24px;
   color: #121212;
+}
+
+.site-dot-surface {
+  background-color: #F7F6F2;
+  background-image: radial-gradient(circle, rgb(18 18 18 / 12%) 0.75px, transparent 0.9px);
+  background-size: 24px 24px;
 }
 
 .hero-dot-grid {

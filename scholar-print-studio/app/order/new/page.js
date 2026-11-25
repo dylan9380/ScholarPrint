@@ -1,5 +1,4 @@
 import OrderForm from "../../order-form";
-import PreviousOrders from "../../previous-orders";
 
 export default function NewOrderPage() {
   return (
@@ -8,7 +7,6 @@ export default function NewOrderPage() {
       <p className="text-ink/60 mb-8 text-sm">
         One standard 3 ft × 4 ft matte poster. Upload a PDF or PPTX to preview it before submitting.
       </p>
-      <PreviousOrders />
       <OrderForm />
     </div>
   );

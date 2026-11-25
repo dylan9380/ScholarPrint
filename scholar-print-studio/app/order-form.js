@@ -32,6 +32,7 @@ export default function OrderForm() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(null);
   const fileExtension = file?.name.split(".").pop()?.toLowerCase();
   const promoApplied = isPromoCode(promoCode);
   const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
@@ -48,7 +49,9 @@ export default function OrderForm() {
         return;
       }
 
-      const fullName = data.user?.user_metadata?.full_name;
+      const user = data.user;
+      setIsSignedIn(Boolean(user));
+      const fullName = user?.user_metadata?.full_name;
       if (typeof fullName === "string" && fullName.trim()) {
         setCustomerName((currentName) => currentName || fullName.trim());
       }
@@ -58,8 +61,18 @@ export default function OrderForm() {
       }
     });
 
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+      setIsSignedIn(Boolean(user));
+      const fullName = user?.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) {
+        setCustomerName((currentName) => currentName || fullName.trim());
+      }
+    });
+
     return () => {
       cancelled = true;
+      listener.subscription.unsubscribe();
     };
   }, [supabase]);
 
@@ -199,6 +212,16 @@ export default function OrderForm() {
 
   return (
     <>
+    {isSignedIn === false && (
+      <p className="mb-6 text-sm text-ink/60">
+        Sign in or create an account to submit an order.
+      </p>
+    )}
+    {isSignedIn && (
+      <p className="mb-6 text-sm text-ink/60">
+        Signed in as <span className="font-semibold text-ink">{customerName || "you"}</span>.
+      </p>
+    )}
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div>
         <label htmlFor="customer-name" className="field-label">Your full name</label>

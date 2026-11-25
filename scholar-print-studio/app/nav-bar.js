@@ -28,7 +28,7 @@ export default function NavBar() {
   }
 
   return (
-    <header className="border-b border-ink/15 bg-paper text-ink">
+    <header className="site-dot-surface border-b border-ink/15 text-ink">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-12">
         <Link href="/" className="flex items-center gap-3 font-display text-lg font-bold tracking-tight">
           <Image
