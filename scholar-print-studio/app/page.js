@@ -7,15 +7,11 @@ export default function HomePage() {
       <section className="bg-ink text-paper px-6 py-24">
         <div className="max-w-3xl mx-auto text-center">
           <div className="font-mono text-xs uppercase tracking-widest text-kraftsoft mb-4">
-            Large-format printing, done in-house
+            Conference Posters
           </div>
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-5">
-            Conference posters, printed right, before your flight.
+            Quality posters for quality research.
           </h1>
-          <p className="text-paper/80 max-w-xl mx-auto mb-8">
-            Order a standard 3 ft × 4 ft matte poster for $70, or use promo code SCHOLAR40 for $40.
-            Upload a PDF or PPTX and preview it before submitting.
-          </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <a href="#order" className="btn-primary bg-cyanbright text-ink hover:bg-cyanbright/80">
               Order a poster
@@ -30,6 +26,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-ink/10 bg-white/70 px-6 py-8 text-center">
+        <p className="font-mono text-xs uppercase tracking-widest text-ink/60 mb-4">
+          Trusted by students from
+        </p>
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 font-display font-semibold text-sm text-ink/80">
+          <span>University of Waterloo</span>
+          <span>University of Windsor</span>
+          <span>Laurier University</span>
+          <span>University of Guelph</span>
+        </div>
+      </section>
+
       <section className="max-w-4xl mx-auto px-6 py-16 grid md:grid-cols-3 gap-8 text-sm">
         <div>
           <div className="font-mono text-xs text-kraft mb-2">01</div>
@@ -39,7 +47,7 @@ export default function HomePage() {
         <div>
           <div className="font-mono text-xs text-kraft mb-2">02</div>
           <h3 className="font-display font-semibold mb-1">One standard poster</h3>
-          <p className="text-ink/70">3 ft × 4 ft on matte paper. $70 standard price, or $40 with SCHOLAR40.</p>
+          <p className="text-ink/70">Standard 3 ft × 4 ft matte paper, sized for academic posters.</p>
         </div>
         <div>
           <div className="font-mono text-xs text-kraft mb-2">03</div>

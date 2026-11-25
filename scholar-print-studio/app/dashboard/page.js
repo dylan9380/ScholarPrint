@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_LABEL = {
+  awaiting_payment: "Awaiting payment",
+  payment_failed: "Payment failed",
+  payment_expired: "Payment expired",
   submitted: "Submitted",
   received: "Received",
   printing: "Printing",
@@ -23,7 +26,7 @@ export default async function DashboardPage() {
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, status, created_at")
+    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -81,7 +84,10 @@ export default async function DashboardPage() {
                   <td className="px-4 py-3 capitalize">{order.material}</td>
                   <td className="px-4 py-3">{STATUS_LABEL[order.status] ?? order.status}</td>
                   <td className="px-4 py-3">
-                    {order.price_cents == null ? "—" : `$${(order.price_cents / 100).toFixed(2)}`}
+                    {order.price_cents != null &&
+                      (order.payment_status === "paid" || order.payment_status === "not_applicable")
+                      ? `$${(order.price_cents / 100).toFixed(2)}`
+                      : "—"}
                   </td>
                   <td className="px-4 py-3 text-ink/60">
                     {new Date(order.created_at).toLocaleDateString()}

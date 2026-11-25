@@ -46,11 +46,45 @@ create table public.orders (
   material text not null default 'matte',
   quantity int not null default 1,
   rush boolean not null default false,
-  status text not null default 'submitted',
+  status text not null default 'awaiting_payment',
   price_cents int,
+  payment_status text not null default 'unpaid',
+  stripe_checkout_session_id text unique,
+  promo_code text,
   notes text,
   created_at timestamptz not null default now()
 );
+
+create or replace function public.set_order_checkout_defaults()
+returns trigger as $$
+begin
+  if new.quantity is null or new.quantity < 1 or new.quantity > 20 then
+    raise exception 'Order quantity must be between 1 and 20';
+  end if;
+
+  new.width_in := 36;
+  new.height_in := 48;
+  new.material := 'matte';
+  new.rush := false;
+  new.payment_status := 'unpaid';
+  new.status := 'awaiting_payment';
+  new.stripe_checkout_session_id := null;
+
+  if upper(coalesce(new.promo_code, '')) = 'LYDIA40' then
+    new.promo_code := 'Lydia40';
+    new.price_cents := 4000 * new.quantity;
+  else
+    new.promo_code := null;
+    new.price_cents := 7000 * new.quantity;
+  end if;
+
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger orders_checkout_defaults
+  before insert on public.orders
+  for each row execute function public.set_order_checkout_defaults();
 
 alter table public.orders enable row level security;
 
@@ -64,10 +98,12 @@ create policy "orders_select_own_or_admin" on public.orders
 create policy "orders_insert_own" on public.orders
   for insert with check (auth.uid() = user_id);
 
-create policy "orders_update_own_or_admin" on public.orders
+create policy "orders_update_admin_only" on public.orders
   for update using (
-    auth.uid() = user_id
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+  )
+  with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
   );
 
 -- ------------------------------------------------------------

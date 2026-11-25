@@ -4,20 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const STANDARD_PRICE_CENTS = 7000;
-const PROMO_PRICE_CENTS = 4000;
-const PROMO_CODE = "SCHOLAR40";
-const POSTER_WIDTH_IN = 36;
-const POSTER_HEIGHT_IN = 48;
-
-function formatPrice(cents) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
-
 export default function OrderForm() {
   const supabase = createClient();
   const router = useRouter();
@@ -29,15 +15,8 @@ export default function OrderForm() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
   const [pptxPreviewStatus, setPptxPreviewStatus] = useState("idle");
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoMessage, setPromoMessage] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
-  const [uploadWarning, setUploadWarning] = useState("");
-  const [submittedOrder, setSubmittedOrder] = useState(null);
-
-  const unitPriceCents = promoApplied ? PROMO_PRICE_CENTS : STANDARD_PRICE_CENTS;
-  const totalPriceCents = unitPriceCents * quantity;
   const fileExtension = file?.name.split(".").pop()?.toLowerCase();
 
   useEffect(() => {
@@ -85,20 +64,9 @@ export default function OrderForm() {
     };
   }, [file, fileExtension]);
 
-  function applyPromoCode() {
-    if (promoCode.trim().toUpperCase() === PROMO_CODE) {
-      setPromoApplied(true);
-      setPromoMessage("Promo applied — your poster is $40 each.");
-    } else {
-      setPromoApplied(false);
-      setPromoMessage("That promo code isn’t valid.");
-    }
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    setUploadWarning("");
 
     const {
       data: { user },
@@ -117,79 +85,37 @@ export default function OrderForm() {
 
     setStatus("saving");
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        title: title.trim() || "Standard 3 ft × 4 ft poster",
-        width_in: POSTER_WIDTH_IN,
-        height_in: POSTER_HEIGHT_IN,
-        material: "matte",
-        quantity,
-        rush: false,
-        price_cents: totalPriceCents,
-        notes,
-      })
-      .select()
-      .single();
+    const formData = new FormData();
+    formData.set("title", title.trim());
+    formData.set("quantity", String(quantity));
+    formData.set("notes", notes);
+    formData.set("promoCode", promoCode.trim());
+    if (file) formData.set("file", file);
 
-    if (orderError) {
-      setError(orderError.message);
-      setStatus("idle");
-      return;
-    }
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
 
-    if (file) {
-      const path = `${user.id}/${order.id}/${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("poster-files")
-        .upload(path, file);
-
-      if (uploadError) {
-        setUploadWarning(`Your order was submitted, but the file upload failed: ${uploadError.message}`);
-      } else {
-        const { error: fileRecordError } = await supabase.from("order_files").insert({
-          order_id: order.id,
-          storage_path: path,
-          filename: file.name,
-        });
-
-        if (fileRecordError) {
-          setUploadWarning(
-            `Your order was submitted, but its file could not be attached: ${fileRecordError.message}`
-          );
-        }
+      if (!response.ok) {
+        setError(result.error || "Could not start checkout.");
+        setStatus("idle");
+        return;
       }
+
+      if (!result.url) {
+        setError("Checkout did not return a payment link. Please try again.");
+        setStatus("idle");
+        return;
+      }
+
+      window.location.assign(result.url);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Could not start checkout.");
+      setStatus("idle");
     }
-
-    setSubmittedOrder(order);
-    setStatus("submitted");
-    router.refresh();
-  }
-
-  if (submittedOrder) {
-    return (
-      <section className="border border-ink/15 bg-white p-6 sm:p-8 rounded-sm" aria-live="polite">
-        <p className="font-mono text-xs uppercase tracking-widest text-cyan mb-3">
-          Order confirmation
-        </p>
-        <h2 className="font-display text-2xl font-semibold mb-2">Your order has been submitted.</h2>
-        <p className="text-ink/70 mb-4">
-          We’ve received {submittedOrder.title} for {formatPrice(submittedOrder.price_cents)}.
-        </p>
-        <p className="text-sm text-ink/60 mb-5">
-          Confirmation number: <span className="font-mono">{submittedOrder.id}</span>
-        </p>
-        {uploadWarning && <p className="text-proofred text-sm mb-5">{uploadWarning}</p>}
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard")}
-          className="btn-primary"
-        >
-          View my orders
-        </button>
-      </section>
-    );
   }
 
   return (
@@ -232,39 +158,12 @@ export default function OrderForm() {
             id="promo-code"
             className="field-input"
             value={promoCode}
-            onChange={(e) => {
-              setPromoCode(e.target.value);
-              setPromoApplied(false);
-              setPromoMessage("");
-            }}
+            onChange={(e) => setPromoCode(e.target.value)}
             placeholder="Enter promo code"
             autoCapitalize="characters"
           />
-          <button type="button" className="btn-ghost justify-center" onClick={applyPromoCode}>
-            Apply
-          </button>
         </div>
-        <p className="text-xs text-ink/60 mt-2">
-          Use <span className="font-mono">{PROMO_CODE}</span> for the $40 promotional price.
-        </p>
-        {promoMessage && (
-          <p className={`text-sm mt-2 ${promoApplied ? "text-cyan" : "text-proofred"}`} role="status">
-            {promoMessage}
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-end justify-between border-t border-ink/10 pt-4">
-        <div>
-          <p className="field-label">Total</p>
-          {promoApplied && (
-            <p className="text-sm text-ink/50 line-through">{formatPrice(STANDARD_PRICE_CENTS * quantity)}</p>
-          )}
-          <p className="font-display text-2xl font-semibold">{formatPrice(totalPriceCents)}</p>
-        </div>
-        <p className="text-sm text-ink/60">
-          {formatPrice(unitPriceCents)} per poster
-        </p>
+        <p className="text-xs text-ink/60 mt-2">Your total will be shown at secure checkout.</p>
       </div>
 
       <div>
@@ -282,12 +181,17 @@ export default function OrderForm() {
         {file && (
           <div className="mt-4 border border-ink/15 rounded-sm overflow-hidden">
             <div className="bg-paper/70 px-4 py-2 text-sm font-medium">{file.name}</div>
+            <p className="font-mono text-[11px] uppercase tracking-wider text-ink/60 px-3 pt-3">
+              Academic poster preview · 3:4
+            </p>
             {fileExtension === "pdf" && pdfPreviewUrl && (
-              <iframe
-                title={`Preview of ${file.name}`}
-                src={pdfPreviewUrl}
-                className="w-full h-[480px] bg-white"
-              />
+              <div className="aspect-[3/4] w-full max-w-[360px] mx-auto bg-paper p-2">
+                <iframe
+                  title={`3:4 academic poster preview of ${file.name}`}
+                  src={pdfPreviewUrl}
+                  className="w-full h-full bg-white"
+                />
+              </div>
             )}
             {fileExtension === "pptx" && (
               <>
@@ -299,8 +203,8 @@ export default function OrderForm() {
                     This presentation could not be previewed. You can still submit the file.
                   </p>
                 )}
-                <div className="max-h-[480px] overflow-auto bg-white">
-                  <canvas ref={pptxPreviewRef} className="block w-full h-auto" />
+                <div className="aspect-[3/4] w-full max-w-[360px] mx-auto flex items-center justify-center overflow-hidden bg-paper p-2">
+                  <canvas ref={pptxPreviewRef} className="block max-w-full max-h-full object-contain bg-white" />
                 </div>
               </>
             )}
@@ -322,7 +226,7 @@ export default function OrderForm() {
       {error && <p className="text-proofred text-sm" role="alert">{error}</p>}
 
       <button type="submit" disabled={status === "saving"} className="btn-primary w-full justify-center">
-        {status === "saving" ? "Submitting…" : `Submit order · ${formatPrice(totalPriceCents)}`}
+        {status === "saving" ? "Preparing secure checkout…" : "Continue to payment"}
       </button>
     </form>
   );
