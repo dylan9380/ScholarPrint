@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Lenis from "lenis";
@@ -86,15 +87,14 @@ export default function LandingHero() {
         <div className="flex flex-wrap items-center gap-3 border-b border-[#121212]/20 pb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-xs">
           <span>600 DPI // 36&quot; ROLL // BUILT FOR YOUR PRESENTATION</span>
           <span className="ml-auto inline-flex items-center gap-2 text-[#FF4D00]">
-            <svg
-              viewBox="0 0 90 45"
+            <Image
+              src="/canada-maple-leaf.svg"
+              alt=""
+              width={20}
+              height={21}
               aria-hidden="true"
-              className="h-5 w-10"
-              fill="currentColor"
-            >
-              <path d="M4 3h15v39H4zM71 3h15v39H71z" />
-              <path d="m45 3 4.1 9.5 6.7-5.8-1.6 10.1 10.4-1.1-6.1 8 9.2 4.1-10.2 3.2 4.3 8.8-10-3.1-1.7 8.3-4.1-5.1-4.1 5.1-1.7-8.3-10 3.1 4.3-8.8-10.2-3.2 9.2-4.1-6.1-8 10.4 1.1-1.6-10.1 6.7 5.8z" />
-            </svg>
+              className="h-5 w-5"
+            />
             <span>Proudly Canadian</span>
           </span>
         </div>
