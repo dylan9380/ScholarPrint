@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import AuthModal from "./auth-modal";
 
 export default function OrderForm() {
   const supabase = createClient();
-  const router = useRouter();
   const pptxPreviewRef = useRef(null);
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -17,6 +16,7 @@ export default function OrderForm() {
   const [promoCode, setPromoCode] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [authOpen, setAuthOpen] = useState(false);
   const fileExtension = file?.name.split(".").pop()?.toLowerCase();
 
   useEffect(() => {
@@ -64,25 +64,7 @@ export default function OrderForm() {
     };
   }, [file, fileExtension]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError) {
-      setError(userError.message);
-      return;
-    }
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
+  async function startCheckout() {
     setStatus("saving");
 
     const formData = new FormData();
@@ -98,6 +80,12 @@ export default function OrderForm() {
         body: formData,
       });
       const result = await response.json();
+
+      if (response.status === 401) {
+        setStatus("idle");
+        setAuthOpen(true);
+        return;
+      }
 
       if (!response.ok) {
         setError(result.error || "Could not start checkout.");
@@ -116,6 +104,28 @@ export default function OrderForm() {
       setError(requestError instanceof Error ? requestError.message : "Could not start checkout.");
       setStatus("idle");
     }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+
+    if (userError) {
+      setError(userError.message);
+      return;
+    }
+
+    await startCheckout();
   }
 
   return (
@@ -228,6 +238,16 @@ export default function OrderForm() {
       <button type="submit" disabled={status === "saving"} className="btn-primary w-full justify-center">
         {status === "saving" ? "Preparing secure checkout…" : "Continue to payment"}
       </button>
+
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          onSignedIn={() => {
+            setAuthOpen(false);
+            startCheckout();
+          }}
+        />
+      )}
     </form>
   );
 }
