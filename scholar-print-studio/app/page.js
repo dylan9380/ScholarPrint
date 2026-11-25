@@ -1,5 +1,6 @@
 import OrderForm from "./order-form";
 import LandingHero from "./hero";
+import PreviousOrders from "./previous-orders";
 
 export default function HomePage() {
   return (
@@ -51,6 +52,7 @@ export default function HomePage() {
           <p className="text-ink/60 mb-8 text-sm">
             Sign in or create an account to submit an order.
           </p>
+          <PreviousOrders />
           <OrderForm />
         </div>
       </section>

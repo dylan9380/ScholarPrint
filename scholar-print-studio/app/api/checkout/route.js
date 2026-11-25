@@ -68,7 +68,14 @@ export async function POST(request) {
 
   const conference = promoCode ? PROMO_CONFERENCE : null;
 
-  const title = String(formData.get("title") ?? "").trim().slice(0, 200);
+  const titleEntry = formData.get("title");
+  const customerNameEntry = formData.get("customerName");
+  const title = typeof titleEntry === "string" ? titleEntry.trim().slice(0, 200) : "";
+  const customerName =
+    typeof customerNameEntry === "string" ? customerNameEntry.trim().slice(0, 120) : "";
+  if (!customerName) return errorResponse("Enter the customer name for this order.", 400);
+  if (!title) return errorResponse("Enter a poster title for this order.", 400);
+
   const notes = String(formData.get("notes") ?? "").slice(0, 2000);
   const fileEntry = formData.get("file");
   const file =
@@ -76,11 +83,13 @@ export async function POST(request) {
       ? fileEntry
       : null;
 
-  if (file) {
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "pptx"].includes(extension)) {
-      return errorResponse("Upload a PDF or PPTX file.", 400);
-    }
+  if (!file || file.size === 0) {
+    return errorResponse("Upload the print-ready PDF or PPTX file before checkout.", 400);
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (!["pdf", "pptx"].includes(extension)) {
+    return errorResponse("Upload a PDF or PPTX file.", 400);
   }
 
   const unitPriceCents = promoCode ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS;
@@ -89,11 +98,12 @@ export async function POST(request) {
     .from("orders")
     .insert({
       user_id: user.id,
-      title: title || "Standard 3 ft × 4 ft conference poster",
+      title,
       width_in: POSTER_WIDTH_IN,
       height_in: POSTER_HEIGHT_IN,
       material: "matte",
       quantity,
+      customer_name: customerName,
       rush: false,
       status: "awaiting_payment",
       payment_status: "unpaid",

@@ -21,6 +21,7 @@ function formatPrice(cents) {
 export default function OrderForm() {
   const supabase = createClient();
   const pptxPreviewRef = useRef(null);
+  const [customerName, setCustomerName] = useState("");
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
@@ -36,6 +37,31 @@ export default function OrderForm() {
   const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
   const baseTotalCents = STANDARD_UNIT_PRICE_CENTS * priceQuantity;
   const totalCents = (promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS) * priceQuantity;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth.getUser().then(({ data, error: userError }) => {
+      if (cancelled) return;
+      if (userError && userError.name !== "AuthSessionMissingError") {
+        setError(userError.message);
+        return;
+      }
+
+      const fullName = data.user?.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) {
+        setCustomerName((currentName) => currentName || fullName.trim());
+      }
+    }).catch((userError) => {
+      if (!cancelled) {
+        setError(userError instanceof Error ? userError.message : "Could not load your account details.");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   useEffect(() => {
     if (!file || fileExtension !== "pdf") {
@@ -83,9 +109,30 @@ export default function OrderForm() {
   }, [file, fileExtension]);
 
   async function startCheckout() {
+    const requiredField = !customerName.trim()
+      ? document.getElementById("customer-name")
+      : !title.trim()
+        ? document.getElementById("poster-title")
+        : !file || file.size === 0
+          ? document.getElementById("poster-file")
+          : null;
+
+    if (requiredField) {
+      setError(
+        requiredField.id === "customer-name"
+          ? "Enter your full name before checkout."
+          : requiredField.id === "poster-title"
+            ? "Enter a poster title before checkout."
+            : "Upload the print-ready PDF or PPTX file before checkout."
+      );
+      requiredField.focus();
+      return;
+    }
+
     setStatus("saving");
 
     const formData = new FormData();
+    formData.set("customerName", customerName.trim());
     formData.set("title", title.trim());
     formData.set("quantity", String(quantity));
     formData.set("notes", notes);
@@ -152,7 +199,20 @@ export default function OrderForm() {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      <div>
+        <label htmlFor="customer-name" className="field-label">Your full name</label>
+        <input
+          id="customer-name"
+          className="field-input"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          maxLength={120}
+          autoComplete="name"
+          required
+        />
+      </div>
+
       <div>
         <label htmlFor="poster-title" className="field-label">Poster title</label>
         <input
@@ -161,6 +221,8 @@ export default function OrderForm() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. CPA 2026 — Attention and Memory"
+          maxLength={200}
+          required
         />
       </div>
 
@@ -230,6 +292,7 @@ export default function OrderForm() {
           type="file"
           accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
           className="field-input"
+          required
           onChange={(e) => {
             setFile(e.target.files?.[0] ?? null);
             setError("");
@@ -279,6 +342,14 @@ export default function OrderForm() {
           placeholder="Deadline, preferred delivery details, colour matching, or other print notes."
         />
       </div>
+
+      <p className="text-sm text-ink/60">
+        Need technical help? Call{" "}
+        <a className="font-semibold text-ink underline" href="tel:2262600691">
+          226-260-0691
+        </a>
+        .
+      </p>
 
       {error && <p className="text-proofred text-sm" role="alert">{error}</p>}
 

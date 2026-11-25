@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import CancellationRequestButton from "../cancellation-request-button";
+
+const SUPPORT_PHONE = "226-260-0691";
 
 const STATUS_LABEL = {
   awaiting_payment: "Awaiting payment",
@@ -30,11 +33,60 @@ export default async function DashboardPage() {
       ? rawName.trim()
       : user.email?.split("@")[0] ?? "there";
 
-  const { data: orders, error } = await supabase
+  const [
+    { data: orders, error },
+    { data: profile, error: profileError },
+    { data: cancellationRequests, error: cancellationError },
+  ] = await Promise.all([
+    supabase
     .from("orders")
-    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, created_at")
+    .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, created_at")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }),
+    supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("order_cancellation_requests")
+      .select("order_id, status")
+      .eq("user_id", user.id),
+  ]);
+  const isAdmin = profile?.is_admin === true;
+
+  let adminRequests = [];
+  let adminRequestError = null;
+  let adminOrderTitles = {};
+  if (isAdmin) {
+    const { data, error: requestError } = await supabase
+      .from("order_cancellation_requests")
+      .select("id, order_id, user_id, message, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    adminRequestError = requestError;
+    adminRequests = data ?? [];
+
+    if (adminRequests.length > 0) {
+      const { data: requestOrders, error: requestOrdersError } = await supabase
+        .from("orders")
+        .select("id, title, customer_name")
+        .in("id", adminRequests.map((request) => request.order_id));
+
+      if (requestOrdersError) {
+        adminRequestError = requestOrdersError;
+      } else {
+        adminOrderTitles = Object.fromEntries(
+          (requestOrders ?? []).map((order) => [
+            order.id,
+            { title: order.title, customerName: order.customer_name },
+          ])
+        );
+      }
+    }
+  }
+  const pendingOrderIds = new Set(
+    (cancellationRequests ?? [])
+      .filter((request) => request.status === "pending")
+      .map((request) => request.order_id)
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
@@ -45,6 +97,12 @@ export default async function DashboardPage() {
         <div>
           <h1 className="font-display text-4xl font-bold tracking-[-0.05em] sm:text-5xl">My orders</h1>
           <p className="mt-2 text-sm text-ink/60">Order history and print status.</p>
+          <p className="mt-2 text-sm text-ink/60">
+            Tech support:{" "}
+            <a className="font-semibold text-ink underline" href={`tel:${SUPPORT_PHONE.replaceAll("-", "")}`}>
+              {SUPPORT_PHONE}
+            </a>
+          </p>
         </div>
         <Link href="/order/new" className="btn-primary">
           New order <span aria-hidden="true">↗</span>
@@ -52,6 +110,50 @@ export default async function DashboardPage() {
       </div>
 
       {error && <p className="text-proofred text-sm mb-6">{error.message}</p>}
+      {profileError && <p className="text-proofred text-sm mb-6">{profileError.message}</p>}
+      {cancellationError && (
+        <p className="text-proofred text-sm mb-6">{cancellationError.message}</p>
+      )}
+
+      {isAdmin && (
+        <section className="mb-10 border border-ink/15 bg-white p-5 sm:p-7">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-ink/15 pb-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-cyan">Staff inbox</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold">Cancellation requests</h2>
+            </div>
+            <a className="text-sm underline" href={`tel:${SUPPORT_PHONE.replaceAll("-", "")}`}>
+              Tech support: {SUPPORT_PHONE}
+            </a>
+          </div>
+          {adminRequestError ? (
+            <p className="text-sm text-proofred" role="alert">{adminRequestError.message}</p>
+          ) : adminRequests.length === 0 ? (
+            <p className="text-sm text-ink/60">No pending cancellation requests.</p>
+          ) : (
+            <ul className="divide-y divide-ink/10">
+              {adminRequests.map((request) => (
+                <li key={request.id} className="py-4">
+                  <p className="font-semibold">
+                    {adminOrderTitles[request.order_id]?.title ?? "Poster order"}
+                  </p>
+                  <p className="mt-1 text-xs text-ink/60">
+                    Customer: {adminOrderTitles[request.order_id]?.customerName || "—"}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-ink/80">{request.message}</p>
+                  <p className="mt-2 font-mono text-[10px] text-ink/50">
+                    Order {request.order_id} · Account {request.user_id} ·{" "}
+                    {new Date(request.created_at).toLocaleString()}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-4 text-xs text-ink/60">
+            Requests do not cancel orders automatically. Contact the customer, then decide whether to cancel.
+          </p>
+        </section>
+      )}
 
       {!error && (!orders || orders.length === 0) && (
         <section className="grid border border-ink/15 bg-white md:grid-cols-[0.9fr_1.1fr]">
@@ -92,9 +194,12 @@ export default async function DashboardPage() {
 
       {orders && orders.length > 0 && (
         <div className="overflow-x-auto border border-ink/15 bg-white">
-          <table className="w-full min-w-[900px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-ink text-paper">
               <tr>
+                <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
+                  Customer
+                </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Poster
                 </th>
@@ -116,11 +221,15 @@ export default async function DashboardPage() {
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Placed
                 </th>
+                <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
+                  Cancellation
+                </th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id} className="border-t border-ink/10">
+                  <td className="px-4 py-3">{order.customer_name || "—"}</td>
                   <td className="px-4 py-3">
                     {order.title}
                     {order.rush && (
@@ -132,7 +241,11 @@ export default async function DashboardPage() {
                   </td>
                   <td className="px-4 py-3 capitalize">{order.material}</td>
                   <td className="px-4 py-3">{order.conference ?? "—"}</td>
-                  <td className="px-4 py-3">{STATUS_LABEL[order.status] ?? order.status}</td>
+                  <td className="px-4 py-3">
+                    {order.status === "ready" && order.conference
+                      ? "Ready for conference delivery"
+                      : STATUS_LABEL[order.status] ?? order.status}
+                  </td>
                   <td className="px-4 py-3">
                     {order.price_cents != null
                       ? `$${(order.price_cents / 100).toFixed(2)}`
@@ -140,6 +253,14 @@ export default async function DashboardPage() {
                   </td>
                   <td className="px-4 py-3 text-ink/60">
                     {new Date(order.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    {!["cancelled", "completed"].includes(order.status) && (
+                      <CancellationRequestButton
+                        orderId={order.id}
+                        pending={pendingOrderIds.has(order.id)}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}
