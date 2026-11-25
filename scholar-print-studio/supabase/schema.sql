@@ -51,6 +51,7 @@ create table public.orders (
   payment_status text not null default 'unpaid',
   stripe_checkout_session_id text unique,
   promo_code text,
+  conference text,
   notes text,
   created_at timestamptz not null default now()
 );
@@ -70,12 +71,16 @@ begin
   new.status := 'awaiting_payment';
   new.stripe_checkout_session_id := null;
 
-  if upper(coalesce(new.promo_code, '')) = 'LYDIA40' then
-    new.promo_code := 'Lydia40';
-    new.price_cents := 4000 * new.quantity;
+  if upper(coalesce(new.promo_code, '')) = 'UWPSYCH389' then
+    new.promo_code := 'UWPsych389';
+    new.price_cents := 3999 * new.quantity;
+    if new.conference is null or new.conference not in ('CSBBCS') then
+      raise exception 'Select a valid conference for the UWPsych389 promo code';
+    end if;
   else
     new.promo_code := null;
-    new.price_cents := 7000 * new.quantity;
+    new.price_cents := 7999 * new.quantity;
+    new.conference := null;
   end if;
 
   return new;

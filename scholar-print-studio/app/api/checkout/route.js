@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
+import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
+import {
+  CONFERENCE_OPTIONS,
+  PROMO_CODE,
+  PROMO_UNIT_PRICE_CENTS,
+  STANDARD_UNIT_PRICE_CENTS,
+  isPromoCode,
+} from "@/lib/checkout-pricing";
 
-const STANDARD_PRICE_CENTS = 7000;
-const PROMO_PRICE_CENTS = 4000;
-const PROMO_CODE = "LYDIA40";
 const POSTER_WIDTH_IN = 36;
 const POSTER_HEIGHT_IN = 48;
 
@@ -56,10 +61,23 @@ export async function POST(request) {
   }
 
   const rawPromoCode = String(formData.get("promoCode") ?? "").trim();
-  const promoCode = rawPromoCode.toUpperCase();
-  if (promoCode && promoCode !== PROMO_CODE) {
+  const promoCode = rawPromoCode && isPromoCode(rawPromoCode) ? PROMO_CODE : null;
+  if (rawPromoCode && !promoCode) {
     return errorResponse("That promo code is not valid.", 400);
   }
+
+  const rawConference = formData.get("conference");
+  if (rawConference && typeof rawConference !== "string") {
+    return errorResponse("Choose a valid conference.", 400);
+  }
+  const conferenceSelection = typeof rawConference === "string" ? rawConference.trim() : "";
+  if (promoCode && !CONFERENCE_OPTIONS.includes(conferenceSelection)) {
+    return errorResponse("Choose a conference for the UWPsych389 promo code.", 400);
+  }
+  if (!promoCode && conferenceSelection) {
+    return errorResponse("A conference can only be selected with the UWPsych389 promo code.", 400);
+  }
+  const conference = promoCode ? conferenceSelection : null;
 
   const title = String(formData.get("title") ?? "").trim().slice(0, 200);
   const notes = String(formData.get("notes") ?? "").slice(0, 2000);
@@ -76,7 +94,7 @@ export async function POST(request) {
     }
   }
 
-  const unitPriceCents = promoCode ? PROMO_PRICE_CENTS : STANDARD_PRICE_CENTS;
+  const unitPriceCents = promoCode ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS;
   const totalPriceCents = unitPriceCents * quantity;
   const { data: order, error: orderError } = await admin
     .from("orders")
@@ -91,13 +109,27 @@ export async function POST(request) {
       status: "awaiting_payment",
       payment_status: "unpaid",
       promo_code: promoCode || null,
+      conference,
       price_cents: totalPriceCents,
       notes,
     })
-    .select("id")
+    .select("id, price_cents, promo_code, conference")
     .single();
 
   if (orderError) return errorResponse(`Could not create the order: ${orderError.message}`, 500);
+
+  if (
+    order.price_cents !== totalPriceCents ||
+    order.promo_code !== (promoCode || null) ||
+    order.conference !== conference
+  ) {
+    const message = await markOrderFailed(
+      admin,
+      order.id,
+      "Supabase checkout pricing is out of date. Apply the latest checkout pricing migration and try again."
+    );
+    return errorResponse(message, 503);
+  }
 
   if (file) {
     const safeFilename = file.name.replace(/[\\/?#]/g, "_");
@@ -140,7 +172,7 @@ export async function POST(request) {
     session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
-        payment_method_types: ["card"],
+        allowed_payment_method_types: ["card"],
         line_items: [
           {
             price_data: {
@@ -159,7 +191,8 @@ export async function POST(request) {
         metadata: {
           order_id: order.id,
           user_id: user.id,
-          promo_code: promoCode,
+          promo_code: promoCode || "",
+          conference: conference || "",
         },
         success_url: `${siteUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/order/cancelled`,
@@ -175,9 +208,19 @@ export async function POST(request) {
     return errorResponse(message, 502);
   }
 
-  if (!session.url) {
-    const message = await markOrderFailed(admin, order.id, "Stripe did not return a checkout URL.");
-    return errorResponse(message, 502);
+  if (!isValidStripeCheckoutUrl(session.url)) {
+    let expireWarning = "";
+    try {
+      await stripe.checkout.sessions.expire(session.id);
+    } catch (expireError) {
+      expireWarning = ` Stripe checkout could not be expired: ${expireError.message}`;
+    }
+
+    const reason = session.url
+      ? "Stripe returned an invalid checkout URL."
+      : "Stripe did not return a checkout URL.";
+    const message = await markOrderFailed(admin, order.id, reason);
+    return errorResponse(`${message}${expireWarning}`, 502);
   }
 
   const { error: sessionUpdateError } = await admin

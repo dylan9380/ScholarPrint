@@ -32,7 +32,7 @@ export default async function DashboardPage() {
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, created_at")
+    .select("id, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
 
       {orders && orders.length > 0 && (
         <div className="overflow-x-auto border border-ink/15 bg-white">
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-ink text-paper">
               <tr>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
@@ -103,6 +103,9 @@ export default async function DashboardPage() {
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Material
+                </th>
+                <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
+                  Conference
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Status
@@ -128,6 +131,7 @@ export default async function DashboardPage() {
                     {order.width_in} × {order.height_in} in · ×{order.quantity}
                   </td>
                   <td className="px-4 py-3 capitalize">{order.material}</td>
+                  <td className="px-4 py-3">{order.conference ?? "—"}</td>
                   <td className="px-4 py-3">{STATUS_LABEL[order.status] ?? order.status}</td>
                   <td className="px-4 py-3">
                     {order.price_cents != null

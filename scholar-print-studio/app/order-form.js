@@ -2,7 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  CONFERENCE_OPTIONS,
+  PROMO_CODE,
+  PROMO_UNIT_PRICE_CENTS,
+  STANDARD_UNIT_PRICE_CENTS,
+  isPromoCode,
+} from "@/lib/checkout-pricing";
+import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
 import AuthModal from "./auth-modal";
+
+function formatPrice(cents) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
+}
 
 export default function OrderForm() {
   const supabase = createClient();
@@ -10,6 +25,7 @@ export default function OrderForm() {
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
+  const [conference, setConference] = useState("");
   const [file, setFile] = useState(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
   const [pptxPreviewStatus, setPptxPreviewStatus] = useState("idle");
@@ -18,6 +34,10 @@ export default function OrderForm() {
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
   const fileExtension = file?.name.split(".").pop()?.toLowerCase();
+  const promoApplied = isPromoCode(promoCode);
+  const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
+  const baseTotalCents = STANDARD_UNIT_PRICE_CENTS * priceQuantity;
+  const totalCents = (promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS) * priceQuantity;
 
   useEffect(() => {
     if (!file || fileExtension !== "pdf") {
@@ -72,6 +92,7 @@ export default function OrderForm() {
     formData.set("quantity", String(quantity));
     formData.set("notes", notes);
     formData.set("promoCode", promoCode.trim());
+    formData.set("conference", promoApplied ? conference : "");
     if (file) formData.set("file", file);
 
     try {
@@ -93,13 +114,17 @@ export default function OrderForm() {
         return;
       }
 
-      if (!result.url) {
-        setError("Checkout did not return a payment link. Please try again.");
+      if (!isValidStripeCheckoutUrl(result.url)) {
+        setError(
+          result.url
+            ? "The payment link is invalid. Please try again or contact support."
+            : "Checkout did not return a payment link. Please try again."
+        );
         setStatus("idle");
         return;
       }
 
-      window.location.assign(result.url);
+      window.location.assign(new URL(result.url).href);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not start checkout.");
       setStatus("idle");
@@ -115,7 +140,7 @@ export default function OrderForm() {
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError) {
+    if (userError && userError.name !== "AuthSessionMissingError") {
       setError(userError.message);
       return;
     }
@@ -170,11 +195,52 @@ export default function OrderForm() {
             className="field-input"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
-            placeholder="Enter promo code"
+            placeholder={PROMO_CODE}
             autoCapitalize="characters"
           />
         </div>
-        <p className="text-xs text-ink/60 mt-2">Your total will be shown at secure checkout.</p>
+        <p className="text-xs text-ink/60 mt-2">
+          {promoApplied
+            ? `${PROMO_CODE} applied. This order will be hand-delivered at the selected conference.`
+            : `Enter ${PROMO_CODE} for the conference rate.`}
+        </p>
+        <div className="mt-4 border-t border-ink/15 pt-4" aria-live="polite">
+          <div className="flex items-baseline justify-between gap-4 text-sm">
+            <span className="text-ink/60">Price per poster</span>
+            <span className="font-display font-semibold">
+              {promoApplied && (
+                <del className="mr-2 font-normal text-ink/50">{formatPrice(STANDARD_UNIT_PRICE_CENTS)}</del>
+              )}
+              {formatPrice(promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS)}
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-4">
+            <span className="text-sm text-ink/60">
+              Order total <span className="font-mono text-xs">× {priceQuantity}</span>
+            </span>
+            <span className="font-display text-xl font-bold">
+              {promoApplied && <del className="mr-2 text-sm font-normal text-ink/50">{formatPrice(baseTotalCents)}</del>}
+              {formatPrice(totalCents)}
+            </span>
+          </div>
+        </div>
+        {promoApplied && (
+          <div className="mt-4 border-t border-ink/15 pt-4">
+            <label htmlFor="order-conference" className="field-label">Conference</label>
+            <select
+              id="order-conference"
+              className="field-input"
+              value={conference}
+              onChange={(event) => setConference(event.target.value)}
+              required
+            >
+              <option value="">Select a conference</option>
+              {CONFERENCE_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div>

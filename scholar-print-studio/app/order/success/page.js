@@ -8,7 +8,8 @@ function formatPrice(cents) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 
@@ -27,7 +28,7 @@ export default async function OrderSuccessPage({ searchParams }) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id, user_id, title, price_cents, payment_status")
+    .select("id, user_id, title, price_cents, payment_status, conference")
     .eq("stripe_checkout_session_id", sessionId)
     .maybeSingle();
 
@@ -91,6 +92,11 @@ export default async function OrderSuccessPage({ searchParams }) {
       <p className="text-ink/70 mb-4">
         {order.title} · {formatPrice(order.price_cents)}
       </p>
+      {order.conference && (
+        <p className="text-sm text-ink/60 mb-4">
+          Conference: <span className="font-semibold text-ink">{order.conference}</span>
+        </p>
+      )}
       <p className="text-sm text-ink/60 mb-8">
         Confirmation number: <span className="font-mono">{order.id}</span>
       </p>
