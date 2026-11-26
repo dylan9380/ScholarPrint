@@ -2,12 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatDeliveryAddress } from "@/lib/delivery-address";
+import { formatCAD } from "@/lib/format-currency";
 import CancellationRequestButton from "../cancellation-request-button";
 
 const STATUS_LABEL = {
   awaiting_payment: "Awaiting payment",
   payment_failed: "Payment failed",
   payment_expired: "Payment expired",
+  address_review: "Delivery address review",
   submitted: "Submitted",
   received: "Received",
   printing: "Printing",
@@ -39,7 +41,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
     .from("orders")
-    .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country, created_at")
+    .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, delivery_method, shipping_cost_cents, tracking_number, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false }),
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
@@ -203,6 +205,9 @@ export default async function DashboardPage() {
                   Delivery destination
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
+                  Delivery method
+                </th>
+                <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Status
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
@@ -234,13 +239,27 @@ export default async function DashboardPage() {
                     {order.conference || formatDeliveryAddress(order) || "—"}
                   </td>
                   <td className="px-4 py-3">
+                    <span className="inline-flex border border-ink/15 bg-paper/60 px-2 py-1 text-xs font-medium">
+                      {order.conference
+                        ? "Conference Delivery"
+                        : order.delivery_method === "shipped"
+                          ? "Shipped"
+                          : "Local Delivery"}
+                    </span>
+                    {order.tracking_number && (
+                      <p className="mt-1 text-xs text-ink/60">
+                        Tracking: {order.tracking_number}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     {order.status === "ready" && order.conference
                       ? "Ready for conference delivery"
                       : STATUS_LABEL[order.status] ?? order.status}
                   </td>
                   <td className="px-4 py-3">
                     {order.price_cents != null
-                      ? `$${(order.price_cents / 100).toFixed(2)}`
+                      ? formatCAD(order.price_cents + (order.shipping_cost_cents ?? 0))
                       : "—"}
                   </td>
                   <td className="px-4 py-3 text-ink/60">

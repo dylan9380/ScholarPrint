@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
+import { getDeliveryDetails } from "@/lib/delivery";
 import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
 import {
   PROMO_CONFERENCE,
@@ -47,6 +48,9 @@ function parseDeliveryAddress(formData, promoOrder) {
   const requiredFields = ["line1", "city", "region", "postalCode", "country"];
   if (requiredFields.some((field) => !address[field])) {
     return { error: "Enter the complete delivery address for this order." };
+  }
+  if (address.country.toUpperCase() !== "CANADA") {
+    return { error: "Delivery is currently available to Canadian addresses only." };
   }
 
   return { address };
@@ -106,6 +110,12 @@ export async function POST(request) {
     Boolean(promoCode)
   );
   if (addressError) return errorResponse(addressError, 400);
+  const deliveryDetails = promoCode
+    ? { deliveryMethod: "conference", shippingCents: 0 }
+    : getDeliveryDetails(deliveryAddress.postalCode);
+  if (!deliveryDetails) {
+    return errorResponse("Enter a valid Canadian postal code to calculate delivery.", 400);
+  }
 
   const titleEntry = formData.get("title");
   const customerNameEntry = formData.get("customerName");
@@ -148,6 +158,8 @@ export async function POST(request) {
       payment_status: "unpaid",
       promo_code: promoCode || null,
       conference,
+      delivery_method: deliveryDetails.deliveryMethod,
+      shipping_cost_cents: deliveryDetails.shippingCents,
       delivery_address_line1: deliveryAddress?.line1 ?? null,
       delivery_address_line2: deliveryAddress?.line2 ?? null,
       delivery_city: deliveryAddress?.city ?? null,
@@ -158,7 +170,7 @@ export async function POST(request) {
       notes,
     })
     .select(
-      "id, price_cents, promo_code, conference, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country"
+      "id, price_cents, promo_code, conference, delivery_method, shipping_cost_cents, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country"
     )
     .single();
 
@@ -168,6 +180,8 @@ export async function POST(request) {
     order.price_cents !== totalPriceCents ||
     order.promo_code !== (promoCode || null) ||
     order.conference !== conference ||
+    order.delivery_method !== deliveryDetails.deliveryMethod ||
+    order.shipping_cost_cents !== deliveryDetails.shippingCents ||
     order.delivery_address_line1 !== (deliveryAddress?.line1 ?? null) ||
     order.delivery_address_line2 !== (deliveryAddress?.line2 ?? null) ||
     order.delivery_city !== (deliveryAddress?.city ?? null) ||
@@ -228,7 +242,7 @@ export async function POST(request) {
         line_items: [
           {
             price_data: {
-              currency: "usd",
+              currency: "cad",
               product_data: {
                 name: "Conference poster",
                 description: "Standard 3 ft × 4 ft matte paper poster",
@@ -245,7 +259,27 @@ export async function POST(request) {
           user_id: user.id,
           promo_code: promoCode || "",
           conference: conference || "",
+          delivery_method: deliveryDetails.deliveryMethod,
+          shipping_cost_cents: String(deliveryDetails.shippingCents),
         },
+        ...(!promoCode && {
+          shipping_address_collection: { allowed_countries: ["CA"] },
+          shipping_options: [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                fixed_amount: {
+                  amount: deliveryDetails.shippingCents,
+                  currency: "cad",
+                },
+                display_name:
+                  deliveryDetails.deliveryMethod === "local"
+                    ? "Free Local Delivery (GTA & Kitchener-Waterloo)"
+                    : 'Tracked Courier Tube Shipping (38" Protective Tube)',
+              },
+            },
+          ],
+        }),
         success_url: `${siteUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/order/cancelled`,
       },

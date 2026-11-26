@@ -2,21 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getDeliveryDetails } from "@/lib/delivery";
 import {
   PROMO_CONFERENCE,
   PROMO_UNIT_PRICE_CENTS,
   STANDARD_UNIT_PRICE_CENTS,
   isPromoCode,
 } from "@/lib/checkout-pricing";
+import { formatCAD } from "@/lib/format-currency";
 import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
 import AuthModal from "./auth-modal";
 import PrintProofPreview from "./print-proof-preview";
 
 function formatPrice(cents) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
+  return formatCAD(cents);
 }
 
 export default function OrderForm() {
@@ -40,9 +39,17 @@ export default function OrderForm() {
   const [authOpen, setAuthOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(null);
   const promoApplied = isPromoCode(promoCode);
+  const isCanadianAddress = deliveryAddress.country.trim().toUpperCase() === "CANADA";
+  const deliveryDetails =
+    !promoApplied && isCanadianAddress
+      ? getDeliveryDetails(deliveryAddress.postalCode)
+      : null;
   const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
   const baseTotalCents = STANDARD_UNIT_PRICE_CENTS * priceQuantity;
-  const totalCents = (promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS) * priceQuantity;
+  const itemTotalCents =
+    (promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS) * priceQuantity;
+  const shippingCents = promoApplied ? 0 : deliveryDetails?.shippingCents ?? 0;
+  const totalCents = itemTotalCents + shippingCents;
 
   useEffect(() => {
     let cancelled = false;
@@ -109,6 +116,18 @@ export default function OrderForm() {
               : "Complete the delivery address before checkout."
       );
       requiredField.focus();
+      return;
+    }
+
+    if (!promoApplied && !isCanadianAddress) {
+      setError("Delivery is currently available to Canadian addresses only.");
+      document.getElementById("delivery-address-country").focus();
+      return;
+    }
+
+    if (!promoApplied && !deliveryDetails) {
+      setError("Enter a valid Canadian postal code to calculate delivery.");
+      document.getElementById("delivery-address-postal-code").focus();
       return;
     }
 
@@ -275,14 +294,29 @@ export default function OrderForm() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline justify-between gap-4">
+            <span className="text-sm text-ink/60">Delivery / Shipping</span>
+            <span className="font-display font-semibold">
+              {promoApplied || deliveryDetails?.shippingCents === 0
+                ? "Free"
+                : deliveryDetails
+                  ? formatPrice(deliveryDetails.shippingCents)
+                  : "Enter postal code"}
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-4">
             <span className="text-sm text-ink/60">
               Order total <span className="font-mono text-xs">× {priceQuantity}</span>
             </span>
             <span className="font-display text-xl font-bold">
               {promoApplied && <del className="mr-2 text-sm font-normal text-ink/50">{formatPrice(baseTotalCents)}</del>}
-              {formatPrice(totalCents)}
+              {promoApplied || deliveryDetails ? formatPrice(totalCents) : "—"}
             </span>
           </div>
+          {!promoApplied && !deliveryDetails && (
+            <p className="mt-2 text-right text-xs text-ink/50">
+              Enter a valid Canadian postal code to calculate delivery and the final total.
+            </p>
+          )}
         </div>
       </div>
 
@@ -295,7 +329,9 @@ export default function OrderForm() {
       ) : (
         <fieldset className="border border-ink/10 p-4 rounded-sm">
           <legend className="field-label px-1">Delivery address</legend>
-          <p className="mb-4 text-sm text-ink/60">No additional delivery charge.</p>
+          <p className="mb-4 text-sm text-ink/60">
+            Delivery pricing is based on your Canadian postal code.
+          </p>
           <div className="space-y-4">
             <div>
               <label htmlFor="delivery-address-line1" className="field-label">Street address</label>
@@ -360,6 +396,31 @@ export default function OrderForm() {
                   maxLength={20}
                   required
                 />
+                <p
+                  className={`mt-2 border px-3 py-2 text-xs ${
+                    deliveryDetails?.isLocal
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                      : deliveryDetails
+                        ? "border-cyan/30 bg-cyan/5 text-ink"
+                        : "border-ink/10 bg-paper/60 text-ink/60"
+                  }`}
+                  aria-live="polite"
+                  role="status"
+                >
+                  {deliveryDetails
+                    ? deliveryDetails.label
+                    : "Free delivery in GTA & Kitchener-Waterloo · $20 flat-rate tracked shipping across Canada"}
+                </p>
+                {deliveryDetails && (
+                  <p className="mt-1 text-[11px] text-ink/50">
+                    {deliveryDetails.estimatedWindow}
+                  </p>
+                )}
+                {deliveryDetails && (
+                  <p className="mt-1 text-[11px] text-ink/50">
+                    Use this same postal code in Stripe checkout so the delivery rate stays accurate.
+                  </p>
+                )}
               </div>
               <div>
                 <label htmlFor="delivery-address-country" className="field-label">Country</label>
