@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatDeliveryAddress } from "@/lib/delivery-address";
 import CancellationRequestButton from "../cancellation-request-button";
 
 const STATUS_LABEL = {
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
     .from("orders")
-    .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, created_at")
+    .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false }),
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
@@ -199,7 +200,7 @@ export default async function DashboardPage() {
                   Material
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
-                  Conference
+                  Delivery destination
                 </th>
                 <th className="text-left font-mono text-[11px] uppercase tracking-wider px-4 py-3">
                   Status
@@ -229,7 +230,9 @@ export default async function DashboardPage() {
                     {order.width_in} × {order.height_in} in · ×{order.quantity}
                   </td>
                   <td className="px-4 py-3 capitalize">{order.material}</td>
-                  <td className="px-4 py-3">{order.conference ?? "—"}</td>
+                  <td className="px-4 py-3 whitespace-normal">
+                    {order.conference || formatDeliveryAddress(order) || "—"}
+                  </td>
                   <td className="px-4 py-3">
                     {order.status === "ready" && order.conference
                       ? "Ready for conference delivery"

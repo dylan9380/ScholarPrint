@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
+import { formatDeliveryAddress } from "@/lib/delivery-address";
 
 function formatPrice(cents) {
   return new Intl.NumberFormat("en-US", {
@@ -28,7 +29,7 @@ export default async function OrderSuccessPage({ searchParams }) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id, user_id, title, price_cents, payment_status, conference")
+    .select("id, user_id, title, price_cents, payment_status, conference, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country")
     .eq("stripe_checkout_session_id", sessionId)
     .maybeSingle();
 
@@ -95,6 +96,11 @@ export default async function OrderSuccessPage({ searchParams }) {
       {order.conference && (
         <p className="text-sm text-ink/60 mb-4">
           Conference: <span className="font-semibold text-ink">{order.conference}</span>
+        </p>
+      )}
+      {!order.conference && (
+        <p className="text-sm text-ink/60 mb-4">
+          Deliver to: <span className="font-semibold text-ink">{formatDeliveryAddress(order)}</span>
         </p>
       )}
       <p className="text-sm text-ink/60 mb-8">

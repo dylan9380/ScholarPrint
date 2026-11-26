@@ -62,6 +62,23 @@ export default function PrintProofPreview({ file }) {
   }, []);
 
   useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+
+    function handleWheel(event) {
+      if (event.deltaY === 0) return;
+      event.preventDefault();
+      const direction = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+      setZoom((currentZoom) =>
+        Math.min(MAX_ZOOM, Math.max(0.5, currentZoom * direction))
+      );
+    }
+
+    stage.addEventListener("wheel", handleWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!file || !canvas) return undefined;
 
@@ -170,13 +187,6 @@ export default function PrintProofPreview({ file }) {
     setPan({ x: 0, y: 0 });
   }
 
-  function handleWheel(event) {
-    event.preventDefault();
-    if (event.deltaY === 0) return;
-    const direction = event.deltaY < 0 ? 1.12 : 1 / 1.12;
-    changeZoom(zoom * direction);
-  }
-
   function handlePointerDown(event) {
     if (zoom <= 1) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -239,7 +249,6 @@ export default function PrintProofPreview({ file }) {
       <div
         ref={stageRef}
         className={`poster-proof-stage poster-proof-stage--${backdrop} ${zoom > 1 ? "is-zoomed" : ""}`}
-        onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishPointerDrag}

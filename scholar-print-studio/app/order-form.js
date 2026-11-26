@@ -25,6 +25,14 @@ export default function OrderForm() {
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    line1: "",
+    line2: "",
+    city: "",
+    region: "",
+    postalCode: "",
+    country: "Canada",
+  });
   const [file, setFile] = useState(null);
   const [promoCode, setPromoCode] = useState("");
   const [status, setStatus] = useState("idle");
@@ -74,13 +82,21 @@ export default function OrderForm() {
   }, [supabase]);
 
   async function startCheckout() {
-    const requiredField = !customerName.trim()
-      ? document.getElementById("customer-name")
-      : !title.trim()
-        ? document.getElementById("poster-title")
-        : !file || file.size === 0
-          ? document.getElementById("poster-file")
-          : null;
+    const requiredAddressFields = [
+      { id: "delivery-address-line1", value: deliveryAddress.line1 },
+      { id: "delivery-address-city", value: deliveryAddress.city },
+      { id: "delivery-address-region", value: deliveryAddress.region },
+      { id: "delivery-address-postal-code", value: deliveryAddress.postalCode },
+      { id: "delivery-address-country", value: deliveryAddress.country },
+    ];
+    const missingAddressField = !promoApplied
+      ? requiredAddressFields.find((field) => !field.value.trim())
+      : null;
+    const requiredField =
+      (!customerName.trim() && document.getElementById("customer-name")) ||
+      (!title.trim() && document.getElementById("poster-title")) ||
+      ((!file || file.size === 0) && document.getElementById("poster-file")) ||
+      (missingAddressField && document.getElementById(missingAddressField.id));
 
     if (requiredField) {
       setError(
@@ -88,7 +104,9 @@ export default function OrderForm() {
           ? "Enter your full name before checkout."
           : requiredField.id === "poster-title"
             ? "Enter a poster title before checkout."
-            : "Upload the print-ready PDF or PPTX file before checkout."
+            : requiredField.id === "poster-file"
+              ? "Upload the print-ready PDF or PPTX file before checkout."
+              : "Complete the delivery address before checkout."
       );
       requiredField.focus();
       return;
@@ -102,6 +120,14 @@ export default function OrderForm() {
     formData.set("quantity", String(quantity));
     formData.set("notes", notes);
     formData.set("promoCode", promoCode.trim());
+    if (!promoApplied) {
+      formData.set("deliveryAddressLine1", deliveryAddress.line1.trim());
+      formData.set("deliveryAddressLine2", deliveryAddress.line2.trim());
+      formData.set("deliveryCity", deliveryAddress.city.trim());
+      formData.set("deliveryRegion", deliveryAddress.region.trim());
+      formData.set("deliveryPostalCode", deliveryAddress.postalCode.trim());
+      formData.set("deliveryCountry", deliveryAddress.country.trim());
+    }
     if (file) formData.set("file", file);
 
     try {
@@ -235,7 +261,7 @@ export default function OrderForm() {
         </div>
         <p className="text-xs text-ink/60 mt-2">
           {promoApplied
-            ? `Discount applied. Delivered directly to ${PROMO_CONFERENCE}, with no transport or delivery fee.`
+            ? `Discount applied. Delivery is fixed to ${PROMO_CONFERENCE}; no address or delivery fee is needed.`
             : "Have a discount code? Enter it here."}
         </p>
         <div className="mt-4 border-t border-ink/15 pt-4" aria-live="polite">
@@ -259,6 +285,98 @@ export default function OrderForm() {
           </div>
         </div>
       </div>
+
+      {promoApplied ? (
+        <div className="border border-ink/10 bg-paper/60 p-4 rounded-sm">
+          <p className="field-label mb-1">Delivery destination</p>
+          <p className="font-display font-semibold">{PROMO_CONFERENCE}</p>
+          <p className="text-sm text-ink/60 mt-1">This destination is fixed for promo orders.</p>
+        </div>
+      ) : (
+        <fieldset className="border border-ink/10 p-4 rounded-sm">
+          <legend className="field-label px-1">Delivery address</legend>
+          <p className="mb-4 text-sm text-ink/60">No additional delivery charge.</p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="delivery-address-line1" className="field-label">Street address</label>
+              <input
+                id="delivery-address-line1"
+                className="field-input"
+                value={deliveryAddress.line1}
+                onChange={(event) => setDeliveryAddress({ ...deliveryAddress, line1: event.target.value })}
+                autoComplete="address-line1"
+                maxLength={200}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="delivery-address-line2" className="field-label">
+                Apartment, unit, or suite <span className="normal-case tracking-normal">(optional)</span>
+              </label>
+              <input
+                id="delivery-address-line2"
+                className="field-input"
+                value={deliveryAddress.line2}
+                onChange={(event) => setDeliveryAddress({ ...deliveryAddress, line2: event.target.value })}
+                autoComplete="address-line2"
+                maxLength={100}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="delivery-address-city" className="field-label">City</label>
+                <input
+                  id="delivery-address-city"
+                  className="field-input"
+                  value={deliveryAddress.city}
+                  onChange={(event) => setDeliveryAddress({ ...deliveryAddress, city: event.target.value })}
+                  autoComplete="address-level2"
+                  maxLength={100}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="delivery-address-region" className="field-label">Province / state</label>
+                <input
+                  id="delivery-address-region"
+                  className="field-input"
+                  value={deliveryAddress.region}
+                  onChange={(event) => setDeliveryAddress({ ...deliveryAddress, region: event.target.value })}
+                  autoComplete="address-level1"
+                  maxLength={100}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="delivery-address-postal-code" className="field-label">Postal / ZIP code</label>
+                <input
+                  id="delivery-address-postal-code"
+                  className="field-input"
+                  value={deliveryAddress.postalCode}
+                  onChange={(event) => setDeliveryAddress({ ...deliveryAddress, postalCode: event.target.value })}
+                  autoComplete="postal-code"
+                  maxLength={20}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="delivery-address-country" className="field-label">Country</label>
+                <input
+                  id="delivery-address-country"
+                  className="field-input"
+                  value={deliveryAddress.country}
+                  onChange={(event) => setDeliveryAddress({ ...deliveryAddress, country: event.target.value })}
+                  autoComplete="country-name"
+                  maxLength={100}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      )}
 
       <div>
         <label htmlFor="poster-file" className="field-label">Poster file (PDF or PPTX)</label>

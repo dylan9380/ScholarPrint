@@ -18,6 +18,40 @@ function errorResponse(message, status) {
   return NextResponse.json({ error: message }, { status });
 }
 
+function parseDeliveryAddress(formData, promoOrder) {
+  if (promoOrder) return { address: null };
+
+  const fields = [
+    ["deliveryAddressLine1", "line1", 200],
+    ["deliveryAddressLine2", "line2", 100],
+    ["deliveryCity", "city", 100],
+    ["deliveryRegion", "region", 100],
+    ["deliveryPostalCode", "postalCode", 20],
+    ["deliveryCountry", "country", 100],
+  ];
+  const address = {};
+
+  for (const [formKey, addressKey, maxLength] of fields) {
+    const entry = formData.get(formKey);
+    if (entry !== null && typeof entry !== "string") {
+      return { error: "Enter a valid delivery address." };
+    }
+
+    const value = typeof entry === "string" ? entry.trim() : "";
+    if (value.length > maxLength) {
+      return { error: `The delivery address field ${addressKey} is too long.` };
+    }
+    address[addressKey] = value || null;
+  }
+
+  const requiredFields = ["line1", "city", "region", "postalCode", "country"];
+  if (requiredFields.some((field) => !address[field])) {
+    return { error: "Enter the complete delivery address for this order." };
+  }
+
+  return { address };
+}
+
 async function markOrderFailed(admin, orderId, message) {
   const { error } = await admin
     .from("orders")
@@ -67,6 +101,11 @@ export async function POST(request) {
   }
 
   const conference = promoCode ? PROMO_CONFERENCE : null;
+  const { address: deliveryAddress, error: addressError } = parseDeliveryAddress(
+    formData,
+    Boolean(promoCode)
+  );
+  if (addressError) return errorResponse(addressError, 400);
 
   const titleEntry = formData.get("title");
   const customerNameEntry = formData.get("customerName");
@@ -109,10 +148,18 @@ export async function POST(request) {
       payment_status: "unpaid",
       promo_code: promoCode || null,
       conference,
+      delivery_address_line1: deliveryAddress?.line1 ?? null,
+      delivery_address_line2: deliveryAddress?.line2 ?? null,
+      delivery_city: deliveryAddress?.city ?? null,
+      delivery_region: deliveryAddress?.region ?? null,
+      delivery_postal_code: deliveryAddress?.postalCode ?? null,
+      delivery_country: deliveryAddress?.country ?? null,
       price_cents: totalPriceCents,
       notes,
     })
-    .select("id, price_cents, promo_code, conference")
+    .select(
+      "id, price_cents, promo_code, conference, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country"
+    )
     .single();
 
   if (orderError) return errorResponse(`Could not create the order: ${orderError.message}`, 500);
@@ -120,12 +167,18 @@ export async function POST(request) {
   if (
     order.price_cents !== totalPriceCents ||
     order.promo_code !== (promoCode || null) ||
-    order.conference !== conference
+    order.conference !== conference ||
+    order.delivery_address_line1 !== (deliveryAddress?.line1 ?? null) ||
+    order.delivery_address_line2 !== (deliveryAddress?.line2 ?? null) ||
+    order.delivery_city !== (deliveryAddress?.city ?? null) ||
+    order.delivery_region !== (deliveryAddress?.region ?? null) ||
+    order.delivery_postal_code !== (deliveryAddress?.postalCode ?? null) ||
+    order.delivery_country !== (deliveryAddress?.country ?? null)
   ) {
     const message = await markOrderFailed(
       admin,
       order.id,
-      "Supabase checkout pricing is out of date. Apply the latest checkout pricing migration and try again."
+      "Supabase checkout or delivery settings are out of date. Apply the latest migration and try again."
     );
     return errorResponse(message, 503);
   }
