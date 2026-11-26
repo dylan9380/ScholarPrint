@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   PROMO_CONFERENCE,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/checkout-pricing";
 import { isValidStripeCheckoutUrl } from "@/lib/stripe/checkout-url";
 import AuthModal from "./auth-modal";
+import PrintProofPreview from "./print-proof-preview";
 
 function formatPrice(cents) {
   return new Intl.NumberFormat("en-US", {
@@ -20,20 +21,16 @@ function formatPrice(cents) {
 
 export default function OrderForm() {
   const supabase = createClient();
-  const pptxPreviewRef = useRef(null);
   const [customerName, setCustomerName] = useState("");
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState(null);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
-  const [pptxPreviewStatus, setPptxPreviewStatus] = useState("idle");
   const [promoCode, setPromoCode] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(null);
-  const fileExtension = file?.name.split(".").pop()?.toLowerCase();
   const promoApplied = isPromoCode(promoCode);
   const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
   const baseTotalCents = STANDARD_UNIT_PRICE_CENTS * priceQuantity;
@@ -75,51 +72,6 @@ export default function OrderForm() {
       listener.subscription.unsubscribe();
     };
   }, [supabase]);
-
-  useEffect(() => {
-    if (!file || fileExtension !== "pdf") {
-      setPdfPreviewUrl("");
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    setPdfPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file, fileExtension]);
-
-  useEffect(() => {
-    if (!file || fileExtension !== "pptx" || !pptxPreviewRef.current) {
-      setPptxPreviewStatus("idle");
-      return;
-    }
-
-    let cancelled = false;
-    let previewer;
-    const canvas = pptxPreviewRef.current;
-    canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
-    setPptxPreviewStatus("loading");
-
-    async function renderPreview() {
-      try {
-        const { PptxRenderer } = await import("pptx-browser");
-        if (cancelled) return;
-        previewer = new PptxRenderer();
-        await previewer.load(file);
-        if (cancelled) return;
-        await previewer.renderSlide(0, canvas, 640);
-        if (!cancelled) setPptxPreviewStatus("ready");
-      } catch {
-        if (!cancelled) setPptxPreviewStatus("error");
-      }
-    }
-
-    renderPreview();
-    return () => {
-      cancelled = true;
-      previewer?.destroy();
-      canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
-    };
-  }, [file, fileExtension]);
 
   async function startCheckout() {
     const requiredField = !customerName.trim()
@@ -324,33 +276,9 @@ export default function OrderForm() {
         {file && (
           <div className="mt-4 border border-ink/15 rounded-sm overflow-hidden">
             <div className="bg-paper/70 px-4 py-2 text-sm font-medium">{file.name}</div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-ink/60 px-3 pt-3">
-              Academic poster preview · 3:4
-            </p>
-            {fileExtension === "pdf" && pdfPreviewUrl && (
-              <div className="aspect-[3/4] w-full max-w-[360px] mx-auto bg-paper p-2">
-                <iframe
-                  title={`3:4 academic poster preview of ${file.name}`}
-                  src={pdfPreviewUrl}
-                  className="w-full h-full bg-white"
-                />
-              </div>
-            )}
-            {fileExtension === "pptx" && (
-              <>
-                {pptxPreviewStatus === "loading" && (
-                  <p className="p-4 text-sm text-ink/60">Preparing presentation preview…</p>
-                )}
-                {pptxPreviewStatus === "error" && (
-                  <p className="p-4 text-sm text-proofred">
-                    This presentation could not be previewed. You can still submit the file.
-                  </p>
-                )}
-                <div className="aspect-[3/4] w-full max-w-[360px] mx-auto flex items-center justify-center overflow-hidden bg-paper p-2">
-                  <canvas ref={pptxPreviewRef} className="block max-w-full max-h-full object-contain bg-white" />
-                </div>
-              </>
-            )}
+            <div className="p-3 sm:p-4">
+              <PrintProofPreview file={file} />
+            </div>
           </div>
         )}
       </div>
@@ -365,14 +293,6 @@ export default function OrderForm() {
           placeholder="Deadline, preferred delivery details, colour matching, or other print notes."
         />
       </div>
-
-      <p className="text-sm text-ink/60">
-        Need technical help? Call{" "}
-        <a className="font-semibold text-ink underline" href="tel:2262600691">
-          226-260-0691
-        </a>
-        .
-      </p>
 
       {error && <p className="text-proofred text-sm" role="alert">{error}</p>}
 

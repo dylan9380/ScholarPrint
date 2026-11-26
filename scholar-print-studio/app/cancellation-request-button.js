@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const SUPPORT_PHONE = "226-260-0691";
-
 export default function CancellationRequestButton({ orderId, pending = false }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -73,10 +71,7 @@ export default function CancellationRequestButton({ orderId, pending = false }) 
           />
           {error && <p className="text-xs text-proofred" role="alert">{error}</p>}
           <p className="text-xs text-ink/60">
-            Your order will not be cancelled automatically. Need help? Call{" "}
-            <a className="font-semibold text-ink underline" href={`tel:${SUPPORT_PHONE.replaceAll("-", "")}`}>
-              {SUPPORT_PHONE}
-            </a>.
+            Your order will not be cancelled automatically. We’ll review your request.
           </p>
           <button type="submit" className="btn-primary px-3 py-2 text-xs" disabled={saving}>
             {saving ? "Sending…" : "Send request"}

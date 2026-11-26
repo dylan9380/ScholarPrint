@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CancellationRequestButton from "../cancellation-request-button";
 
-const SUPPORT_PHONE = "226-260-0691";
-
 const STATUS_LABEL = {
   awaiting_payment: "Awaiting payment",
   payment_failed: "Payment failed",
@@ -97,12 +95,6 @@ export default async function DashboardPage() {
         <div>
           <h1 className="font-display text-4xl font-bold tracking-[-0.05em] sm:text-5xl">My orders</h1>
           <p className="mt-2 text-sm text-ink/60">Order history and print status.</p>
-          <p className="mt-2 text-sm text-ink/60">
-            Tech support:{" "}
-            <a className="font-semibold text-ink underline" href={`tel:${SUPPORT_PHONE.replaceAll("-", "")}`}>
-              {SUPPORT_PHONE}
-            </a>
-          </p>
         </div>
         <Link href="/order/new" className="btn-primary">
           New order <span aria-hidden="true">↗</span>
@@ -122,9 +114,6 @@ export default async function DashboardPage() {
               <p className="font-mono text-[10px] uppercase tracking-wider text-cyan">Staff inbox</p>
               <h2 className="mt-1 font-display text-2xl font-semibold">Cancellation requests</h2>
             </div>
-            <a className="text-sm underline" href={`tel:${SUPPORT_PHONE.replaceAll("-", "")}`}>
-              Tech support: {SUPPORT_PHONE}
-            </a>
           </div>
           {adminRequestError ? (
             <p className="text-sm text-proofred" role="alert">{adminRequestError.message}</p>
