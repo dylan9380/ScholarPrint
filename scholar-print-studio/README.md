@@ -48,11 +48,21 @@ git push -u origin main
 
 ### 5. Deploy on Vercel
 - Go to vercel.com, click **New Project**, and import the GitHub repo
-- In the project's **Environment Variables** settings, add the same two
+- In the project's **Environment Variables** settings, add the required
   variables from your `.env.local`
+- Set `NEXT_PUBLIC_SITE_URL` to your public production domain (for example,
+  `https://your-domain.ca`), not a Vercel deployment URL
 - Deploy — you'll get a live URL immediately (e.g.
   `scholar-print-studio.vercel.app`)
 - Every time you `git push`, Vercel redeploys automatically
+
+### Configure confirmation links and email sender
+- In Supabase **Authentication > URL Configuration**, set the Site URL to the
+  same public domain and allow the `/auth/callback` redirect on that domain.
+- To send auth emails from your own address, configure custom SMTP in Supabase
+  Authentication settings. Use your email provider's SMTP details, set the
+  sender to `support@scholarprint.ca`, and verify the domain's SPF/DKIM records
+  with that provider.
 
 ### 6. Make yourself an admin
 Sign up on the live site once with your own email, then in the Supabase

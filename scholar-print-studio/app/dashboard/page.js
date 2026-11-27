@@ -14,6 +14,7 @@ const STATUS_LABEL = {
   received: "Received",
   printing: "Printing",
   ready: "Ready for pickup",
+  shipped: "On its way",
   completed: "Completed",
   cancelled: "Cancelled",
 };
@@ -43,6 +44,7 @@ export default async function DashboardPage() {
     .from("orders")
     .select("id, customer_name, title, width_in, height_in, material, quantity, rush, price_cents, payment_status, status, conference, delivery_method, shipping_cost_cents, tracking_number, delivery_address_line1, delivery_address_line2, delivery_city, delivery_region, delivery_postal_code, delivery_country, created_at")
     .eq("user_id", user.id)
+    .eq("payment_status", "paid")
     .order("created_at", { ascending: false }),
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
     supabase

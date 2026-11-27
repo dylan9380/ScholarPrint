@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthConfirmationRedirect } from "@/lib/auth-redirect";
 
 export default function AuthModal({ onClose, onSignedIn }) {
   const supabase = createClient();
@@ -38,7 +39,10 @@ export default function AuthModal({ onClose, onSignedIn }) {
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthConfirmationRedirect(
+            `${window.location.pathname}${window.location.search}`,
+            window.location.origin
+          ),
         },
       });
 

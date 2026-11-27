@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthConfirmationRedirect } from "@/lib/auth-redirect";
 
 export default function SignUpPage() {
   const supabase = createClient();
@@ -22,7 +23,7 @@ export default function SignUpPage() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: getAuthConfirmationRedirect("/dashboard", window.location.origin),
       },
     });
 
