@@ -20,8 +20,17 @@ const serif = Source_Serif_4({
 });
 
 export const metadata = {
-  title: "Scholar Print Studio",
-  description: "Conference and academic poster printing, ordered online.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://scholarprint.ca"),
+  title: {
+    default: "Academic Poster Printing | Scholar Print Studio",
+    template: "%s | Scholar Print Studio",
+  },
+  description:
+    "Order 36 × 48 in matte academic and conference posters online. Upload a PDF or PPTX, preview your print, and choose local or tracked Canadian delivery.",
+  applicationName: "Scholar Print Studio",
+  icons: {
+    icon: [{ url: "/scholar-print-mark.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -1,9 +1,42 @@
 import OrderForm from "./order-form";
 import LandingHero from "./hero";
 
+export const metadata = {
+  title: "Academic & Conference Poster Printing",
+  description:
+    "Order 36 × 48 in matte academic and conference posters online. Upload a PDF or PPTX, preview your print, and choose local or tracked Canadian delivery.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_CA",
+    url: "/",
+    siteName: "Scholar Print Studio",
+    title: "Academic & Conference Poster Printing",
+    description:
+      "Order 36 × 48 in matte academic and conference posters online. Upload a PDF or PPTX, preview your print, and choose local or tracked Canadian delivery.",
+  },
+};
+
 export default function HomePage() {
+  const siteUrl = new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://scholarprint.ca"
+  ).origin;
+  const organizationSchema = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Scholar Print Studio",
+    url: siteUrl,
+    logo: new URL("/scholar-print-mark.svg", siteUrl).toString(),
+  }).replace(/</g, "\\u003c");
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: organizationSchema }}
+      />
       <LandingHero />
 
       <section className="max-w-4xl mx-auto px-6 py-16 grid md:grid-cols-3 gap-8 text-sm">

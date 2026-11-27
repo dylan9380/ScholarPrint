@@ -7,6 +7,14 @@ import { formatDeliveryAddress } from "@/lib/delivery-address";
 import { formatCAD } from "@/lib/format-currency";
 import { normalizeCanadianPostalCode } from "@/lib/delivery";
 
+export const metadata = {
+  title: "Order Confirmation",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function OrderSuccessPage({ searchParams }) {
   const supabase = createClient();
   const {

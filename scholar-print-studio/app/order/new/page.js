@@ -1,5 +1,14 @@
 import OrderForm from "../../order-form";
 
+export const metadata = {
+  title: "Order a Poster Online",
+  description:
+    "Upload and preview a print-ready PDF or PPTX for a 36 × 48 in matte academic poster. Choose local delivery or tracked shipping across Canada.",
+  alternates: {
+    canonical: "/order/new",
+  },
+};
+
 export default function NewOrderPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">

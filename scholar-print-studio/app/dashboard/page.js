@@ -19,6 +19,14 @@ const STATUS_LABEL = {
   cancelled: "Cancelled",
 };
 
+export const metadata = {
+  title: "My Orders",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function DashboardPage() {
   const supabase = createClient();
   const {

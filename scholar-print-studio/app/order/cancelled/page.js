@@ -1,5 +1,13 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Checkout Cancelled",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function OrderCancelledPage() {
   return (
     <div className="max-w-xl mx-auto px-6 py-20">
