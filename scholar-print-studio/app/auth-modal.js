@@ -94,7 +94,9 @@ export default function AuthModal({ onClose, onSignedIn }) {
             <p className="text-sm text-ink/60 mt-1">
               {confirmEmail
                 ? `A confirmation link was sent to ${confirmEmail}. Confirm your account, then sign in to pay.`
-                : "Sign in before checkout so we can attach this poster to your orders."}
+                : mode === "login"
+                  ? "Sign in before checkout so we can attach this poster to your orders."
+                  : "Create an account to continue to checkout and track your orders."}
             </p>
           </div>
           <button

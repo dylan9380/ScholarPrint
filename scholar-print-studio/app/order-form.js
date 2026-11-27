@@ -34,6 +34,7 @@ export default function OrderForm() {
   });
   const [file, setFile] = useState(null);
   const [promoCode, setPromoCode] = useState("");
+  const [promoTouched, setPromoTouched] = useState(false);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
@@ -44,7 +45,8 @@ export default function OrderForm() {
     !promoApplied && isCanadianAddress
       ? getDeliveryDetails(deliveryAddress.postalCode)
       : null;
-  const priceQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
+  const isValidQuantity = Number.isInteger(quantity) && quantity >= 1 && quantity <= 20;
+  const priceQuantity = isValidQuantity ? quantity : 0;
   const baseTotalCents = STANDARD_UNIT_PRICE_CENTS * priceQuantity;
   const itemTotalCents =
     (promoApplied ? PROMO_UNIT_PRICE_CENTS : STANDARD_UNIT_PRICE_CENTS) * priceQuantity;
@@ -89,6 +91,12 @@ export default function OrderForm() {
   }, [supabase]);
 
   async function startCheckout() {
+    if (!isValidQuantity) {
+      setError("Choose between 1 and 20 copies.");
+      document.getElementById("poster-copies").focus();
+      return;
+    }
+
     const requiredAddressFields = [
       { id: "delivery-address-line1", value: deliveryAddress.line1 },
       { id: "delivery-address-city", value: deliveryAddress.city },
@@ -188,23 +196,33 @@ export default function OrderForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (status !== "idle") return;
+    setStatus("checking-auth");
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError && userError.name !== "AuthSessionMissingError") {
-      setError(userError.message);
-      return;
+      if (userError && userError.name !== "AuthSessionMissingError") {
+        setError(userError.message);
+        setStatus("idle");
+        return;
+      }
+
+      if (!user) {
+        setStatus("idle");
+        setAuthOpen(true);
+        return;
+      }
+
+      setStatus("idle");
+      await startCheckout();
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Could not check your sign-in status.");
+      setStatus("idle");
     }
-
-    if (!user) {
-      setAuthOpen(true);
-      return;
-    }
-
-    await startCheckout();
   }
 
   return (
@@ -259,11 +277,18 @@ export default function OrderForm() {
           type="number"
           min={1}
           max={20}
+          step={1}
           className="field-input max-w-32"
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
+          aria-invalid={!isValidQuantity}
           required
         />
+        {!isValidQuantity && (
+          <p className="mt-2 text-sm text-proofred" role="alert">
+            Choose between 1 and 20 copies.
+          </p>
+        )}
       </div>
 
       <div className="border border-ink/10 p-4 rounded-sm">
@@ -273,7 +298,11 @@ export default function OrderForm() {
             id="promo-code"
             className="field-input"
             value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
+            onChange={(e) => {
+              setPromoCode(e.target.value);
+              setPromoTouched(false);
+            }}
+            onBlur={() => setPromoTouched(true)}
             placeholder="Enter discount code"
             autoCapitalize="characters"
           />
@@ -281,7 +310,9 @@ export default function OrderForm() {
         <p className="text-xs text-ink/60 mt-2">
           {promoApplied
             ? `Discount applied. Delivery is fixed to ${PROMO_CONFERENCE}; no address or delivery fee is needed.`
-            : "Have a discount code? Enter it here."}
+            : promoTouched && promoCode.trim()
+              ? "That code isn’t recognized. Check it or remove it to continue."
+              : "Have a discount code? Enter it here."}
         </p>
         <div className="mt-4 border-t border-ink/15 pt-4" aria-live="polite">
           <div className="flex items-baseline justify-between gap-4 text-sm">
@@ -308,8 +339,12 @@ export default function OrderForm() {
               Order total <span className="font-mono text-xs">× {priceQuantity}</span>
             </span>
             <span className="font-display text-xl font-bold">
-              {promoApplied && <del className="mr-2 text-sm font-normal text-ink/50">{formatPrice(baseTotalCents)}</del>}
-              {promoApplied || deliveryDetails ? formatPrice(totalCents) : "—"}
+              {promoApplied && isValidQuantity && (
+                <del className="mr-2 text-sm font-normal text-ink/50">
+                  {formatPrice(baseTotalCents)}
+                </del>
+              )}
+              {isValidQuantity && (promoApplied || deliveryDetails) ? formatPrice(totalCents) : "—"}
             </span>
           </div>
           {!promoApplied && !deliveryDetails && (
@@ -475,8 +510,16 @@ export default function OrderForm() {
 
       {error && <p className="text-proofred text-sm" role="alert">{error}</p>}
 
-      <button type="submit" disabled={status === "saving"} className="btn-primary w-full justify-center">
-        {status === "saving" ? "Preparing secure checkout…" : "Continue to payment"}
+      <button
+        type="submit"
+        disabled={status === "checking-auth" || status === "saving"}
+        className="btn-primary w-full justify-center"
+      >
+        {status === "checking-auth"
+          ? "Checking sign-in…"
+          : status === "saving"
+            ? "Preparing secure checkout…"
+            : "Continue to payment"}
       </button>
 
     </form>

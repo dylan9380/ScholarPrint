@@ -1,6 +1,7 @@
 export function formatCAD(cents) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
+  const amount = new Intl.NumberFormat("en-CA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
+  return `CA$${amount}`;
 }
